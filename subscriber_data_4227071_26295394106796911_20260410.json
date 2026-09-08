@@ -1,0 +1,19 @@
+{
+    "data": {
+        "name": null,
+        "first_name": null,
+        "last_name": null,
+        "gender": null,
+        "ava": null,
+        "locale": null,
+        "timezone": "UTC±00"
+    },
+    "external_transfers": [
+        "n8n-n8n.mded7i.easypanel.host"
+    ],
+    "messages": [
+        "Hola",
+        "Hola"
+    ],
+    "generated": "2026-04-10T04:51:33+00:00"
+}

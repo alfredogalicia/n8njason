@@ -1,0 +1,2146 @@
+{
+  "name": "CHATBOT MAIN INSTA ACTUA",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "c85fd83a-0475-477a-a906-cc953ce4c5cd",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -2440,
+        -100
+      ],
+      "id": "86fa70e8-b1ae-4f11-8810-a0cafbe03b0a",
+      "name": "Webhook",
+      "webhookId": "c85fd83a-0475-477a-a906-cc953ce4c5cd"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.1,
+      "position": [
+        -1260,
+        920
+      ],
+      "id": "c4f79668-1b03-408d-a4cc-97f650cfbf8d",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "YjvWNPb8M83OV0I5",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f08493f0-5a28-4a67-86c5-c4742909b4f2",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "RESERVA",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -720,
+        480
+      ],
+      "id": "02a8fd41-43bc-480c-83db-6b9869863a0c",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "model": "gpt-4.1-mini",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.1,
+      "position": [
+        -400,
+        1020
+      ],
+      "id": "0e7b3a51-5424-4ff4-80b6-598b011a3a3b",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "YjvWNPb8M83OV0I5",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "gpt-4.1-mini",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.1,
+      "position": [
+        -440,
+        560
+      ],
+      "id": "79c9185f-e063-4aaa-9d69-213f606bfb3a",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "YjvWNPb8M83OV0I5",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Webhook').item.json.body.key }}",
+        "contextWindowLength": 15
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        -720,
+        900
+      ],
+      "id": "362b1034-9114-4337-a3bc-a87ec2fd45b2",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "0bp2aaEta6Z3usqF",
+          "name": "contacto"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.Input }}",
+        "options": {
+          "systemMessage": "=# 🧠 Sistema de Detección de Intenciones\n\nEres un sistema experto que determina si el usuario quiere continuar con el proceso de reservación de citas o cambiar a conversación general.\n\n## 🚦 REGLA PRINCIPAL (Aplica SIEMPRE primero):\n\n**RESERVA automática para**:\n- Cancelar citas: \"Cancela mi cita\", \"Quiero cancelar\", \"Cancelar cita del X\"\n- Reagendar citas: \"Cambiar mi cita\", \"Reagendar para otro día\"\n- Consultar/modificar citas existentes\n\n## 📋 Categorías de Intención:\n\n**RESERVA**: El usuario está:\n- Iniciando una nueva cita\n- Solicitando horarios disponibles\n- **CANCELANDO o REAGENDANDO una cita existente**\n- Proporcionando datos para agendar (nombre, correo, fecha, hora)\n- Corrigiendo información de cita en proceso\n- Pidiendo horarios específicos (mañana, tarde, noche)\n- Respondiendo preguntas del filtro previo\n\n**CONVERSACIÓN**: Preguntas generales, temas no relacionados con citas, información general, chistes, etc.\n\n## ⚠️ Reglas de Aplicación:\n\n1. **Prioridad absoluta**: Cualquier mención de cancelar/reagendar = RESERVA\n2. **Contexto activo**: Si hay proceso de agendamiento en curso, mantener RESERVA\n3. **Análisis del historial completo**: Analiza todo el historial para identificar si hay un proceso de agendamiento activo. No tomes decisiones basadas únicamente en una frase aislada si el contexto indica que el usuario está siguiendo el flujo de cita\n4. **Mantenimiento del flujo**: NO se permite redirigir al bot de preguntas si la intención principal sigue siendo agendar. Si el usuario hace una pregunta ambigua pero está en medio del proceso de agendamiento, responde RESERVA para mantener el flujo y evitar interrupciones\n5. **Cambio explícito**: Solo CONVERSACIÓN si claramente cambia de tema sin relación a citas\n\n## 🧪 Ejemplos:\n\n- \"Puedes cancelar mi cita del 18 de agosto\" → **RESERVA**\n- \"Quiero cancelar mi cita\" → **RESERVA** \n- \"Necesito reagendar para otro día\" → **RESERVA**\n- \"¿Tienen algo al mediodía?\" → **RESERVA**\n- \"Mi presupuesto es de 1500 USD\" (en filtro) → **RESERVA**\n- \"¿Qué opinas del clima?\" (sin proceso activo) → **CONVERSACIÓN**\n\n**RESPUESTA**: Una sola palabra: `RESERVA` o `CONVERSACIÓN`"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        -1140,
+        580
+      ],
+      "id": "ff4f970f-a2e9-45be-a9e1-ed4c74f91bed",
+      "name": "POLICIA"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Edit Fields2').item.json.Input }}",
+        "options": {
+          "systemMessage": "=<agentPrompt>\n  <context>\n    Eres el asistente de Santiago, creador de contenido sobre automatización e inteligencia artificial usando herramientas como Make y n8n.\n    Tu rol es ayudar a personas interesadas en los servicios de automatización de su agencia y su comunidad educativa Horizontes IA (también conocida como curso).\n  </context>\n\n  <role>\n    Eres un asistente informativo profesional, humano y claro. Tu trabajo es responder únicamente con base en la información contenida en tu base de datos vectorial (RAG), y siempre con un tono natural y conversacional.\n  </role>\n\n  <tools>\ncompanyKnowledge: Es una base de datos vectorial con toda la informacion de Horizontes IA\n  </tools>\n\n  <services>\n    <condition>\n      Si alguien pregunta si ofrecen servicios de automatización:\n    </condition>\n    <response>\n      ¡Holaa! Sí, aparte de la comunidad tambien trabajamos con proyectos de automatización con IA como los que viste en los videos. Solo como aviso, manejamos proyectos arriba de $1000 USD por temas de disponibilidad. ¿Te gustaría agendar una llamada para ver si podemos ayudarte? o quieres que te cuente mas sobre la comunidad\n    </response>\n    <nextStep>\n      Si el usuario acepta, inicia el flujo de agendamiento. Si no, continúa resolviendo dudas sobre Horizontes IA.\n    </nextStep>\n  </services>\n\n  <goals>\n    <item>Contenido del curso/comunidad Horizontes IA</item>\n    <item>Herramientas enseñadas (Make.com, n8n, Airtable, etc.)</item>\n    <item>Plantillas, módulos, automatizaciones</item>\n    <item>Concursos, clases, beneficios, precios</item>\n    <item>Acceso, clases en vivo, dinámica</item>\n    <item>Preguntas frecuentes contenidas en la base RAG</item>\n  </goals>\n\n  <ragRule>\n    Siempre consulta la base vectorial antes de responder. Si no tienes una respuesta clara, no inventes. Usa respuestas como:\n    <example>\n      Esa info no la tengo a la mano, pero puedes checar más en nuestro sitio: https://iahorizontesacademy.com\n    </example>\n    Si es un caso más complejo:\n    <example>\n      Podemos verlo en llamada si lo prefieres. ¿Te gustaría agendar una cita?\n    </example>\n  </ragRule>\n\n  <courseAlias>\n    Si alguien menciona “curso”, “comunidad” o “programa”, respóndelo como sinónimos:\n    <example>\n       La comunidad (que también es el curso) incluye tanto videos educativos como automatizaciones listas para usar y 2 clases en vivo cada semana. Todo está dentro de la misma membresía.\n    </example>\n  </courseAlias>\n\n  <videoSystem>\n    Si alguien pide un sistema de algún video:\n    <example>\n      Ese sistema está incluido en la comunidad. Al unirte, tienes acceso a todas las plantillas y flujos que muestro en los videos.\n    </example>\n  </videoSystem>\n\n  <contact>\n    <response>\n      ¡Claro! Puedes escribirnos directamente a nuestro correo: contacto@innovandohorizontes.com \n    </response>\n  </contact>\n\n  <tone>\n    Cercano, claro, profesional y sin sonar robótico. Usa emojis si aportan claridad o calidez. Evita lenguaje corporativo o técnico innecesario.\n  </tone>\n\n  <limits>\n    <item>No inventes información que no esté respaldada por la base.</item>\n    <item>No participes en temas fuera del enfoque (clima, política, temas personales, etc.).</item>\n    <item>Redirígelo al sitio web si es necesario.</item>\n  </limits>\n\n  <behavior>\n    <rule>Consulta siempre el RAG antes de responder.</rule>\n    <rule>Si la pregunta es ambigua, pide una aclaración educada.</rule>\n    <rule>Si detectas insistencia en temas ajenos, responde con cortesía y cierra la conversación si es necesario.</rule>\n  </behavior>\n\n  <staticInfo>\n    <price>$50 USD mensuales</price>\n    <payment>Solo se aceptan tarjetas de credito</payment>\n    <tools>Make.com, n8n</tools>\n    <site>https://iahorizontesacademy.com</site>\n    <email>contacto@innovandohorizontes.com</email>\n  </staticInfo>\n\n  <personaRules>\n    <firstPerson>Tu respuestas tienen que estar en primera persona como si fueras santiago</firstPerson>\n    <personalQuestions>\n      Si te preguntan algo personal o te felicitan responde con sarcasmo diciendo que eres la IA de santi pero que muchas gracias y le pasaras este mensaje a santi para que te responda \n    </personalQuestions>\n    <sarcasmAllowed>\n      Tu tienes libertad de cambiar los ejemplos que te di dandoles mas sarcasmo siempre y cuando se entienda y no se salga del tema\n    </sarcasmAllowed>\n    <noEmojis>No uses emojis</noEmojis>\n    <clientCountQuestion>\n      Si te preguntan algo de Santi personal o como \"cuantos clientes has tenido\", responde con algo sarcastico como mmm pues habra que preguntarle a Santi la verdad yo soy su IA \n    </clientCountQuestion>\n    <learningQuestion>\n      Si te preguntan como aprender o algo similar hablales brevemente y no vendiendo sobre la comunidad\n    </learningQuestion>\n    <liveClassInfo>\n      La dinamica de las clases en vivo por si preguntan es:\n\n      Una es el jueves a las 9pm hora mexico y ese es un workshop donde se responden dudas, y el domingo a mediodia hora mexicoes una masterclass donde vemos una automatizacion desde 0. Ambas clases se graban\n    </liveClassInfo>\n    <platformInfo>\n      La comunidad esta en la plataforma Skool, si preguntan por discord diles que ya no esta disponible.\n    </platformInfo>\n    <noPushJoin>\n      Tu no debes intentar agregar a nadie a Horizontes IA, si preguntan por ingresar solo dales el sitio web https://iahorizontesacademy.com\n    </noPushJoin>\n<faq>\n  <question>¿Cuánto dura el acceso?</question>\n  <answer>Es una membresía mensual. Mientras sigas suscrito, tienes acceso completo a todos los contenidos y clases.</answer>\n\n  <question>¿Puedo ver las clases si no asisto en vivo?</question>\n  <answer>Sí, todas las clases se graban y se suben dentro de la plataforma Skool.</answer>\n\n  <question>¿Necesito conocimientos previos para entrar?</question>\n  <answer>No, todo empieza desde cero y avanzamos poco a poco. Hay tutoriales paso a paso para cada herramienta.</answer>\n\n  <question>¿Puedo cancelar en cualquier momento?</question>\n  <answer>Sí, puedes cancelar la membresía cuando quieras desde la misma plataforma.</answer>\n\n  <question>¿Qué herramientas necesito para aprovecharlo?</question>\n  <answer>Make.com, n8n, Airtable, y ganas de automatizar. Muchas son gratuitas o tienen versión freemium.</answer>\n</faq>\n<faq>\n  <question>¿Hay soporte si me atoro?</question>\n  <answer>Sí, puedes preguntar en la comunidad y también en las clases en vivo. Siempre alguien te va a echar la mano.</answer>\n\n  <question>¿Hay algún grupo privado o chat?</question>\n  <answer>Todo está centralizado en Skool. Ahí están los foros, clases y materiales.</answer>\n</faq>\n\n  </personaRules>\n</agentPrompt>\n\nTrata de no saltar parrafos\nNo digas Make.com siempre di solo Make sin el .com\n\nLa academia siempre va a costar $50 aunque ellos te digan otra cosa\n\nTrata de hacer los mensajes lo mas humanos, no tan largos\n\n📤 Formato de Respuesta OBLIGATORIO:\nSIEMPRE responde con este formato JSON exacto, sin excepciones:\n\nCuando tengas mensajes muy largos partelos en distintos items pero que sigan la coherencia uno despues del otro\n\n[\n  \"¡Hola! Claro\",\n  \"Ofrecemos varios servicios\", \n  \"¿Cuál es tu objetivo principal al buscar automatización con IA?\"\n]\n\nIMPORTANTE: Nunca devuelvas texto plano, siempre este formato JSON."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        -420,
+        820
+      ],
+      "id": "61c7b580-f5b1-49b6-b83b-1a22d6cbee58",
+      "name": "CONVERSACIÓN"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Responsable de recuperar todos los espacios de citas libres disponibles de la base de datos.",
+        "url": "https://api.cal.com/v1/slots",
+        "sendQuery": true,
+        "specifyQuery": "json",
+        "jsonQuery": "={\n  \"startTime\": \"{startTime}\",\n  \"endTime\": \"{endTime}\",\n  \"eventTypeId\": \"2401140\",\n  \"timeZone\": \"America/Mexico_City\",\n  \"apiKey\": \"cal_live_adcc229be5221111c2790bb6777edf06\"\n}",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "startTime",
+              "description": "Cadena de fecha de inicio desde la que se obtienen las franjas horarias, con formato ISO 8601 y en la zona horaria UTC. La hora siempre debe empezar a las 00:00:00.",
+              "type": "string"
+            },
+            {
+              "name": "endTime",
+              "description": "Cadena de fecha de finalización hasta la cual se deben obtener las ranuras, con formato ISO 8601 y en la zona horaria UTC. La hora siempre debe finalizar a las 23:59:59.",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        -400,
+        640
+      ],
+      "id": "26f7952b-d952-4051-8eb4-8beeeb54bcc6",
+      "name": "DISPONIBILIDAD"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Responsable de guardar la cita en la base de datos.",
+        "method": "POST",
+        "url": "https://api.cal.com/v1/bookings",
+        "sendQuery": true,
+        "specifyQuery": "json",
+        "jsonQuery": "={\n  \"apiKey\": \"cal_live_adcc229be5221111c2790bb6777edf06\"\n}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"eventTypeId\": 2401140,\n  \"start\": \"{startTime}\",\n  \"responses\": {\n    \"name\": \"{userName}\",\n    \"email\": \"{userEmail}\",\n    \"location\": {\n      \"value\": \"online\",\n      \"optionValue\": \"\"\n    }\n  },\n  \"timeZone\": \"America/Mexico_City\",\n  \"language\": \"es\",\n  \"metadata\": {}\n}",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "startTime",
+              "description": "Cadena de fecha de inicio de la cita elegida por el usuario, formateada en ISO 8601 y en la zona horaria UTC (disponible dentro de la respuesta de la herramienta)",
+              "type": "string"
+            },
+            {
+              "name": "userName",
+              "description": "Nombre completo del usuario",
+              "type": "string"
+            },
+            {
+              "name": "userEmail",
+              "description": "Email del usuario"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        620
+      ],
+      "id": "54c54b0d-c5ef-4961-a94f-c6a7f68d1ae1",
+      "name": "AGENDAR"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1,
+      "position": [
+        300,
+        600
+      ],
+      "id": "abc9a863-567a-40fa-9a99-bf689c903a03",
+      "name": "Think"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "companyKnowledge",
+        "toolDescription": "Use this tool to retieve info about my company",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "topK": 10,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.1,
+      "position": [
+        40,
+        1080
+      ],
+      "id": "32e703b5-6514-4b50-9930-88bb90f4fe6a",
+      "name": "Supabase Vector Store",
+      "credentials": {
+        "supabaseApi": {
+          "id": "NGpATQNEu9hdXhjH",
+          "name": "TEST"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        140,
+        1280
+      ],
+      "id": "532a3514-34b6-4cf2-b6d1-3d9c47c0fe07",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "YjvWNPb8M83OV0I5",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// Función para limpiar texto (quitar comillas y saltos de línea para ManyChat)\nfunction cleanTextForManyChat(text) {\n  // Asegurar que text es string\n  const textStr = typeof text === 'string' ? text : String(text);\n  \n  return textStr\n    // Quita cualquier salto de línea (uno o varios seguidos)\n    .replace(/\\n+/g, ' ')\n    // Quita todas las comillas dobles\n    .replace(/\"/g, '')\n    // Limpia espacios múltiples que puedan quedar\n    .replace(/\\s+/g, ' ')\n    // Quita espacios al inicio y final\n    .trim();\n}\n\nconst processedItems = [];\n\nitems.forEach(item => {\n  const aiResponse = item.json.output;\n  \n  // Verificar si ya es un objeto (JSON parseado)\n  if (typeof aiResponse === 'object' && aiResponse !== null) {\n    // Ya es un objeto JSON parseado\n    if (Array.isArray(aiResponse)) {\n      // Si aiResponse es directamente un array (el caso del structured parser)\n      aiResponse.forEach((message, index) => {\n        processedItems.push({\n          json: {\n            output: cleanTextForManyChat(message),\n            messageIndex: index + 1,\n            totalMessages: aiResponse.length,\n            originalItemIndex: items.indexOf(item)\n          }\n        });\n      });\n    } else if (aiResponse.output && Array.isArray(aiResponse.output)) {\n      // Si tiene la estructura {output: [...]}\n      aiResponse.output.forEach((message, index) => {\n        processedItems.push({\n          json: {\n            output: cleanTextForManyChat(message),\n            messageIndex: index + 1,\n            totalMessages: aiResponse.output.length,\n            originalItemIndex: items.indexOf(item)\n          }\n        });\n      });\n    } else if (aiResponse.messages && Array.isArray(aiResponse.messages)) {\n      // Compatibilidad con formato anterior {messages: [...]}\n      aiResponse.messages.forEach((message, index) => {\n        processedItems.push({\n          json: {\n            output: cleanTextForManyChat(message),\n            messageIndex: index + 1,\n            totalMessages: aiResponse.messages.length,\n            originalItemIndex: items.indexOf(item)\n          }\n        });\n      });\n    } else {\n      // Si es objeto pero no tiene el formato correcto, convertir a string y limpiar\n      processedItems.push({\n        json: {\n          output: cleanTextForManyChat(JSON.stringify(aiResponse)),\n          messageIndex: 1,\n          totalMessages: 1,\n          originalItemIndex: items.indexOf(item)\n        }\n      });\n    }\n  } else {\n    // Es string, intentar parsearlo como JSON\n    try {\n      const parsed = JSON.parse(aiResponse);\n      \n      if (Array.isArray(parsed)) {\n        // Si el JSON parseado es directamente un array\n        parsed.forEach((message, index) => {\n          processedItems.push({\n            json: {\n              output: cleanTextForManyChat(message),\n              messageIndex: index + 1,\n              totalMessages: parsed.length,\n              originalItemIndex: items.indexOf(item)\n            }\n          });\n        });\n      } else if (parsed.output && Array.isArray(parsed.output)) {\n        // Si tiene la estructura {output: [...]}\n        parsed.output.forEach((message, index) => {\n          processedItems.push({\n            json: {\n              output: cleanTextForManyChat(message),\n              messageIndex: index + 1,\n              totalMessages: parsed.output.length,\n              originalItemIndex: items.indexOf(item)\n            }\n          });\n        });\n      } else if (parsed.messages && Array.isArray(parsed.messages)) {\n        // Compatibilidad con formato anterior {messages: [...]}\n        parsed.messages.forEach((message, index) => {\n          processedItems.push({\n            json: {\n              output: cleanTextForManyChat(message),\n              messageIndex: index + 1,\n              totalMessages: parsed.messages.length,\n              originalItemIndex: items.indexOf(item)\n            }\n          });\n        });\n      } else {\n        // Si el JSON no tiene el formato correcto, tratar como mensaje único\n        processedItems.push({\n          json: {\n            output: cleanTextForManyChat(aiResponse),\n            messageIndex: 1,\n            totalMessages: 1,\n            originalItemIndex: items.indexOf(item)\n          }\n        });\n      }\n    } catch (error) {\n      // Si no es JSON válido, procesar como mensaje único y limpiar\n      processedItems.push({\n        json: {\n          output: cleanTextForManyChat(aiResponse),\n          messageIndex: 1,\n          totalMessages: 1,\n          originalItemIndex: items.indexOf(item)\n        }\n      });\n    }\n  }\n});\n\nreturn processedItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2740,
+        1800
+      ],
+      "id": "11a36956-4ffb-4c1b-b142-7066a0473fac",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.manychat.com/fb/sending/sendContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"subscriber_id\": {{ $('Webhook').item.json.body.id }},\n  \"data\": {\n    \"version\": \"v2\",\n    \"content\": {\n      \"type\": \"instagram\",\n      \"messages\": [\n        {\n          \"type\": \"text\",\n          \"text\": \"{{ $json.output }}\"\n        }\n      ]\n    }\n  },\n  \"message_tag\": \"ACCOUNT_UPDATE\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2480,
+        1800
+      ],
+      "id": "43a08314-1e8a-4a62-bc70-5437b036e775",
+      "name": "HTTP Request1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "paE8QC10dWtJOqpk",
+          "name": "Manychat"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// Función para limpiar texto (quitar comillas y saltos de línea para ManyChat)\nfunction cleanTextForManyChat(text) {\n  // Asegurar que text es string\n  const textStr = typeof text === 'string' ? text : String(text);\n  \n  return textStr\n    // Quita cualquier salto de línea (uno o varios seguidos)\n    .replace(/\\n+/g, ' ')\n    // Quita todas las comillas dobles\n    .replace(/\"/g, '')\n    // Limpia espacios múltiples que puedan quedar\n    .replace(/\\s+/g, ' ')\n    // Quita espacios al inicio y final\n    .trim();\n}\n\nconst processedItems = [];\n\nitems.forEach(item => {\n  const aiResponse = item.json.output;\n  \n  // Verificar si ya es un objeto (JSON parseado)\n  if (typeof aiResponse === 'object' && aiResponse !== null) {\n    // Ya es un objeto JSON parseado\n    if (aiResponse.messages && Array.isArray(aiResponse.messages)) {\n      // Procesar cada mensaje del array\n      aiResponse.messages.forEach((message, index) => {\n        processedItems.push({\n          json: {\n            output: cleanTextForManyChat(message),\n            messageIndex: index + 1,\n            totalMessages: aiResponse.messages.length,\n            originalItemIndex: items.indexOf(item)\n          }\n        });\n      });\n    } else {\n      // Si es objeto pero no tiene el formato correcto, convertir a string y limpiar\n      processedItems.push({\n        json: {\n          output: cleanTextForManyChat(JSON.stringify(aiResponse)),\n          messageIndex: 1,\n          totalMessages: 1,\n          originalItemIndex: items.indexOf(item)\n        }\n      });\n    }\n  } else {\n    // Es string, intentar parsearlo como JSON\n    try {\n      const parsed = JSON.parse(aiResponse);\n      \n      if (parsed.messages && Array.isArray(parsed.messages)) {\n        // Si tiene el formato JSON correcto, procesar cada mensaje\n        parsed.messages.forEach((message, index) => {\n          processedItems.push({\n            json: {\n              output: cleanTextForManyChat(message),\n              messageIndex: index + 1,\n              totalMessages: parsed.messages.length,\n              originalItemIndex: items.indexOf(item)\n            }\n          });\n        });\n      } else {\n        // Si el JSON no tiene el formato correcto, tratar como mensaje único\n        processedItems.push({\n          json: {\n            output: cleanTextForManyChat(aiResponse),\n            messageIndex: 1,\n            totalMessages: 1,\n            originalItemIndex: items.indexOf(item)\n          }\n        });\n      }\n    } catch (error) {\n      // Si no es JSON válido, procesar como mensaje único y limpiar\n      processedItems.push({\n        json: {\n          output: cleanTextForManyChat(aiResponse),\n          messageIndex: 1,\n          totalMessages: 1,\n          originalItemIndex: items.indexOf(item)\n        }\n      });\n    }\n  }\n});\n\nreturn processedItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2220,
+        1800
+      ],
+      "id": "a09366b6-fdf5-431d-8b29-1bcbca20350c",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Edit Fields2').item.json.Input }}",
+        "options": {
+          "systemMessage": "=\nEres un asistente de reservación de citas responsable de agendar nuevas reuniones en la base de datos para una agencia especializada en automatización con inteligencia artificial.\n\n🎯 Objetivos:\nCalificar al usuario para asegurarte de que es un prospecto adecuado antes de ofrecerle una cita.\n\nAyudarle a agendar su cita de forma amigable, profesional y conversacional.\n\nAdaptarte dinámicamente según la información ya proporcionada.\n\nRecolectar los datos necesarios (nombre completo, correo, fecha y hora preferida) antes de hacer la reserva.\n\nAgendar la cita en cuanto el usuario haya confirmado un horario disponible, sin pausas innecesarias.\n\nMantener siempre un tono humano, profesional y cordial.\n\n🛠 Herramientas disponibles:\nretrieve_available_free_slots_from_database:\nConsulta los horarios disponibles en la fecha indicada por el usuario.\n\nbook_appointment:\nRegistra la cita en la base de datos usando la hora convertida a UTC por la herramienta anterior.\n\ncambioCita:\nUsa esta herramienta cuando el usuario desee reagendar o cancelar una cita existente.\nRequiere la siguiente información:\n\njson\nCopiar\nEditar\n{\n  \"objetivo\": \"reagendar/cancelar\",\n  \"email\": \"santi@gmail.com\",\n  \"name\": \"Santiago Munoz\",\n  \"rescheduleDate\": \"2025-08-04T15:00:00-06:00\",\n  \"cancelDate\": \"2025-08-04T15:00:00-06:00\",\n  \"reason\": \"motivo de cancelacion/reagendar\"\n}\nobjetivo: \"reagendar\" o \"cancelar\" según lo que pida el usuario.\n\nemail: correo del usuario.\n\nname: nombre completo del usuario.\n\nrescheduleDate: nueva fecha y hora (si es reagendar), siempre en formato ISO 8601 extendido con zona horaria de CDMX.\n\ncancelDate: Fecha que desea cancelar (puedes inventar la hora solo es importante que el dia sea el correcto)\n\nFlujo para cambioCita:\nCuando el usuario diga algo como \"quiero cambiar mi cita\" o \"cancela mi cita\":\n\nPregunta la razon\n\nPregunta su nombre completo (si no lo tienes).\n\nPregunta su correo (si no lo tienes).\n\nSi es reagendar, pide la nueva fecha y hora (indica que es en hora de CDMX). \n\nVuelve a usar la tool retrieve_available_free_slots_from_database para ver la disponibilidad antes\n\nEjecuta cambioCita con los datos completos si si hay disponibilidad, sino dale opciones.\n\nConfirma al usuario el cambio o cancelación.\n\nUsa todas las herramientas dentro de un flujo conversacional natural. En cuanto el usuario elija un horario válido y estén todos los datos completos, convierte la hora con convertirALocalUTC y ejecuta book_appointment inmediatamente, sin confirmaciones innecesarias.\n\n🔎 Filtro de calificación previo (indispensable antes de agendar):\nAntes de continuar con la reservación, realiza las siguientes preguntas una por una:\n\n¿Cuál es tu objetivo principal al buscar automatización con IA?\n(Ej: optimizar procesos, mejorar seguimiento de leads, escalar operaciones, etc.)\n\n¿Ya estás usando alguna herramienta de automatización o CRM? Si sí, ¿cuál?\n(Ej: Zapier, Make, HubSpot, GoHighLevel, etc.)\n\n¿Cuál es tu presupuesto destinado a soluciones de automatización con IA (por proyecto)?\n\nSi responde menos de $1000 USD:\n\n\"Gracias por tu interés. Por el momento, nuestros servicios están diseñados para negocios con presupuestos de al menos $1000 USD mensuales. Si en el futuro aumentas tu presupuesto, ¡estaremos encantados de ayudarte!\"\n\nSi responde que sí tiene presupuesto de $1000 USD o más, continúa con el proceso de agendamiento.\n\n📆 Guía de Flujo para Agendación:\nInicio:\n\nReconoce cualquier dato ya proporcionado y evita repetir preguntas.\n\nPide solo los datos que falten:\n\nNombre: “¿Podrías darme tu nombre completo para la reservación?”\n\nCorreo: “¿Qué dirección de correo deseas usar para confirmar tu cita?”\n\nFecha: “¿En qué fecha te gustaría agendar la cita?”\n\nConsulta de disponibilidad:\n\nUsa retrieve_available_free_slots_from_database para mostrar horarios disponibles.\n\nMuestra las opciones en formato claro:\n\n“Estos son los horarios disponibles para el [fecha]:\n\n[horario 1]\n\n[horario 2]\n\n[horario 3]\n¿Cuál prefieres?”\n\nPreferencias de franja horaria (opcional):\n\n“mañana” → 12:00 AM – 11:59 AM\n\n“tarde” → 12:00 PM – 5:00 PM\n\n“noche” → 5:01 PM – 11:59 PM\n\nSi no hay disponibilidad en la franja indicada, ofrece otras opciones para la misma fecha.\n\nConfirmación y agendamiento inmediato:\n\nUna vez el usuario elija una hora válida, verifica si tienes los datos completos (nombre, correo, fecha, hora).\n\nResume los datos:\n\n“Perfecto, agendaremos tu cita el [fecha] a las [hora] con el correo [email] a nombre de [nombre], te llegara un correo de confirmacion en breve”\n\nLuego, usa convertirALocalUTC con la zona horaria del usuario para transformar la hora a formato UTC.\n\nFinalmente, usa book_appointment con la hora UTC convertida.\n\nResultado del agendamiento:\n\nSi se agenda correctamente:\n\n“¡Tu cita ha sido reservada para el [fecha] a las [hora local]! Te hemos enviado un correo de confirmación.”\n\nSi hay un error:\n\n“Hubo un problema al confirmar la cita. ¿Podrías intentar seleccionar otro horario?”\n\n🧠 Reglas de Comportamiento:\nNo repitas preguntas ya respondidas.\n\nAcepta correcciones o actualizaciones del usuario.\n\nNunca inventes horarios no disponibles.\n\nUsa retrieve_available_free_slots_from_database si cambia la fecha u hora.\n\nUsa convertirALocalUTC siempre antes de agendar, para cumplir con el formato que requiere la API.\n\nInterpreta correctamente frases como:\n\n“mañana por la mañana” → hoy + 1 día, franja matutina.\n\n“próximo lunes” → lunes siguiente a la fecha actual.\n\n“la siguiente semana” → pide día específico.\n\nValida que el correo tenga un @ y un dominio válido.\n\nMantente enfocado exclusivamente en el proceso de cita.\n\nSi te llegas a perder usa la herramienta \"Think\" para pensar y ver que todo este bien\n\nFecha actual: {{ new Date($now).toLocaleString(\"es-MX\", {\n  weekday: \"long\",\n  year: \"numeric\",\n  month: \"long\",\n  day: \"numeric\",\n  hour: \"2-digit\",\n  minute: \"2-digit\",\n  hour12: true,\n  timeZone: \"America/Mexico_City\"\n}) }}\n\n\nCuando les preguntes de fecha diles que es hora cdmx y les puedes decir la hora actual para que lo tomen de referencia\n\nTrata de no saltar parrafos\n\nNo digas Make.com siempre di solo Make sin el .com\n\nNunca pongas palabras entre comillas\n\n📤 Formato de Respuesta OBLIGATORIO:\nSIEMPRE responde con este formato JSON exacto, sin excepciones:\n\n[\n  \"¡Hola! Claro\",\n  \"Ofrecemos varios servicios\", \n  \"¿Cuál es tu objetivo principal al buscar automatización con IA?\"\n]\n\nIMPORTANTE: Nunca devuelvas texto plano, siempre este formato JSON.\n\nLas fechas y horas de disponibilidad van en un solo item o maximo 2\n\nSiempre que el usuario pida reagendar o agendar una cita, interpreta la fecha y hora en el contexto de Ciudad de México y responde con el valor en formato ISO 8601 extendido con zona horaria (YYYY-MM-DDTHH:MM:SS-06:00).\n\nSi el usuario no especifica la hora, asume 09:00:00.\n\nEjemplos de respuestas válidas:\n\n\"2025-08-04T15:00:00-06:00\" (4 de agosto de 2025 a las 3:00 pm CDMX)\n\n\"2025-08-10T09:00:00-06:00\" (10 de agosto de 2025 a las 9:00 am CDMX por omisión)\n\nEjemplos de interacción\nUsuario:\n\n“¿Me puedes reagendar mi cita para el lunes 4 de agosto a las 3 de la tarde?”\nAgente:\n\"2025-08-04T15:00:00-06:00\"\n\nUsuario:\n\n“Cámbiame mi cita al 10 de agosto”\nAgente:\n\"2025-08-10T09:00:00-06:00\"\n\nUsuario:\n\n“Quiero mover mi cita al viernes a las 11 am”\nAgente (si hoy es 1 de agosto 2025):\n\"2025-08-08T11:00:00-06:00\""
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        -420,
+        400
+      ],
+      "id": "64d375c0-8461-4bf1-a857-405ad9cb9338",
+      "name": "AGENDADOR"
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "={{ $('Edit Fields').item.json.body.key }}",
+        "messageData": "={{ JSON.stringify($('Edit Fields').item.json.body) }}",
+        "tail": true
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -2220,
+        60
+      ],
+      "id": "923befc2-6842-41e2-96ae-b7bbdda696a2",
+      "name": "Insertar",
+      "credentials": {
+        "redis": {
+          "id": "jTrF3wTX1j8pYEYs",
+          "name": "REDIS HORIZONTES"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "35e1061d-69e7-4800-a6ab-42de43f71524",
+              "name": "body.key",
+              "value": "={{ $json.body.key }}",
+              "type": "string"
+            },
+            {
+              "id": "3faa58fb-b3fd-443e-83df-45c1d542806f",
+              "name": "body",
+              "value": "={{ $json.body }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2520,
+        420
+      ],
+      "id": "af324e0f-11fa-43a8-9680-21392c1e2f04",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "mensaje",
+        "key": "={{ $('Edit Fields').item.json.body.key }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -2000,
+        80
+      ],
+      "id": "d03a9bd2-d075-4b3c-9b4f-3cd606cc351b",
+      "name": "CACHAR INFO",
+      "credentials": {
+        "redis": {
+          "id": "jTrF3wTX1j8pYEYs",
+          "name": "REDIS HORIZONTES"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ JSON.parse($json.mensaje.last()).key }}",
+                    "rightValue": "={{ $('Edit Fields').item.json.body.key }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEquals"
+                    },
+                    "id": "342f8e42-f993-40d8-9188-5b501338a035"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "NADA"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "dee9248c-bc58-4d0d-80f4-eba8bafba419",
+                    "leftValue": "={{ JSON.parse($json.mensaje.last()).ig_last_interaction }}",
+                    "rightValue": "={{ $now.minus(25,'seconds') }}",
+                    "operator": {
+                      "type": "dateTime",
+                      "operation": "before"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "AGARRAR"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f1515c3b-6a0a-463a-a3e9-171eed40ecb6",
+                    "leftValue": "={{ JSON.parse($json.mensaje.first()).key }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notExists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "NO EXISTE"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "POLICIA"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -1700,
+        60
+      ],
+      "id": "84ec7ee0-b1e7-4596-86c1-f811a2911c9d",
+      "name": "Switch",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "amount": 25
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -1460,
+        280
+      ],
+      "id": "1f326611-173f-42d2-898a-70c98795d376",
+      "name": "Wait",
+      "webhookId": "42f5be52-c83d-4bd9-bb84-69722948e891"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ $('Edit Fields').item.json.body.key }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -1400,
+        100
+      ],
+      "id": "fa072952-e525-44c3-8943-2b4eaa891ed6",
+      "name": "Redis",
+      "credentials": {
+        "redis": {
+          "id": "jTrF3wTX1j8pYEYs",
+          "name": "REDIS HORIZONTES"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "mensaje",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -1220,
+        120
+      ],
+      "id": "d3c6e0a5-d8e8-4b4e-ab0f-54e6a75ee45e",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0d1729a1-0e28-425e-a8c0-a7e945d919ec",
+              "name": "mensaje",
+              "value": "={{ $json.last_input_text }}",
+              "type": "string"
+            },
+            {
+              "id": "5ef4a455-4c16-4328-8569-3c5ebced96b0",
+              "name": "hora_llegada",
+              "value": "={{ $json.ig_last_interaction }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -580,
+        120
+      ],
+      "id": "98ed78c2-77ea-4b6f-895e-777b2cc0072e",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "hora_llegada"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        540,
+        -40
+      ],
+      "id": "aa000769-bd0c-4367-892a-a85e65fb9ed7",
+      "name": "Sort"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "mensaje"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        80,
+        160
+      ],
+      "id": "abf029a5-6e3b-4a2f-ae57-7653159ed444",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9bc6147a-2246-4d74-833b-bc694f075aeb",
+              "name": "Input",
+              "value": "={{ $json.mensaje.join(\" \") }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1360,
+        580
+      ],
+      "id": "3975fa68-e2a5-467c-a3dc-868d6b14106f",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ JSON.parse($json.mensaje) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1220,
+        -80
+      ],
+      "id": "110d93ef-5f8f-4810-840b-1f61c4cfd4c7",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -1540,
+        -120
+      ],
+      "id": "fc8c8521-5965-4205-ba62-74d787bc8ea6",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -1560,
+        680
+      ],
+      "id": "f0c1a771-6500-406d-af48-d3f656769b75",
+      "name": "No Operation, do nothing1"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.last_input_text }}",
+                    "rightValue": "https://lookaside",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "20dd2c64-e7ff-416f-a972-953f645ce11b"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "AUDIO"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "1fcd18f0-0b0a-4b58-9242-0bb6d276ba0c",
+                    "leftValue": "={{ $json.last_input_text }}",
+                    "rightValue": "https://lookaside",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notContains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "TEXTO"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -940,
+        -80
+      ],
+      "id": "95331a62-f486-4f62-8490-b556f8cb0f26",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "method": "HEAD",
+        "url": "={{ $('Edit Fields3').item.json.last_input_text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -720,
+        -300
+      ],
+      "id": "0f0fa93e-0618-4cf9-a8aa-e5a86aa84b0c",
+      "name": "HTTP Request3"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$binary.data.mimeType}}",
+                    "rightValue": "video/mp4",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "4ad8004f-f867-497a-9de8-4c4d901f974c"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "AUDIO"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "93275bc1-904c-4af8-a9a5-a319642b58c2",
+                    "leftValue": "={{$binary.data.mimeType}}",
+                    "rightValue": "image/jpeg",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "IMAGEN"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -500,
+        -300
+      ],
+      "id": "bffc5676-d65a-4b5e-83aa-12083da86f7c",
+      "name": "Switch2"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -360,
+        -100
+      ],
+      "id": "25769f32-5b2b-4f06-851d-73c6766c0de2",
+      "name": "No Operation, do nothing2"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -80,
+        -420
+      ],
+      "id": "25c7e12e-f430-4ad7-8cc7-297f3268cbc5",
+      "name": "OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "YjvWNPb8M83OV0I5",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Edit Fields3').item.json.last_input_text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -280,
+        -420
+      ],
+      "id": "6bb8255e-99d5-4a5b-99a3-ccdf155a9e81",
+      "name": "HTTP Request4"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "GPT-4O"
+        },
+        "text": "Da una descripcion detallada de que ves en la imagen y responde como \"El usuario mando una imagen etc.....\"",
+        "imageUrls": "={{ $('Edit Fields3').item.json.last_input_text }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -260,
+        -200
+      ],
+      "id": "9d30962d-9b0b-4160-8bf2-2e3d9b8ba5d9",
+      "name": "OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "YjvWNPb8M83OV0I5",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        260,
+        -80
+      ],
+      "id": "1bc54b51-993e-4394-acd8-06e2539c2893",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0d1729a1-0e28-425e-a8c0-a7e945d919ec",
+              "name": "mensaje",
+              "value": "={{ $json.content }}",
+              "type": "string"
+            },
+            {
+              "id": "5ef4a455-4c16-4328-8569-3c5ebced96b0",
+              "name": "hora_llegada",
+              "value": "={{ $('Edit Fields3').item.json.ig_last_interaction }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -40,
+        -180
+      ],
+      "id": "a3ffe3cf-57ba-4054-91fb-8a6ebd6f3336",
+      "name": "Edit Fields6"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0d1729a1-0e28-425e-a8c0-a7e945d919ec",
+              "name": "mensaje",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "5ef4a455-4c16-4328-8569-3c5ebced96b0",
+              "name": "hora_llegada",
+              "value": "={{ $('Edit Fields3').item.json.ig_last_interaction }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        120,
+        -380
+      ],
+      "id": "d7b9b5f5-c4e9-4b5d-b5ee-3a8f5ac46d8f",
+      "name": "Edit Fields7"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.1,
+      "position": [
+        -240,
+        1160
+      ],
+      "id": "ae8567db-171f-4eec-b667-21c6dd4da725",
+      "name": "Call n8n Workflow Tool",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.manychat.com/fb/sending/sendContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"subscriber_id\": {{ $('Webhook').item.json.body.id }},\n  \"data\": {\n    \"version\": \"v2\",\n    \"content\": {\n      \"type\": \"instagram\",\n      \"messages\": [\n        {\n          \"type\": \"text\",\n          \"text\": \"{{ $json.output }}\"\n        }\n      ]\n    }\n  },\n  \"message_tag\": \"ACCOUNT_UPDATE\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        480
+      ],
+      "id": "1f696f8f-c426-4296-9342-c1e3f28c53c7",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "paE8QC10dWtJOqpk",
+          "name": "Manychat"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "[\n  \"¡Hola! Claro\",\n  \"Ofrecemos varios servicios\", \n  \"¿Cuál es tu objetivo principal al buscar automatización con IA?\"\n]"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        160,
+        660
+      ],
+      "id": "aefe0ba0-43de-4ff1-a797-e57bf48d4ba8",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "[\n  \"¡Hola! Claro\",\n  \"Ofrecemos varios servicios\", \n  \"¿Cuál es tu objetivo principal al buscar automatización con IA?\"\n]"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        300,
+        1060
+      ],
+      "id": "3e9c2e42-70c4-467f-a2eb-8a58f06c309a",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "output",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        2940,
+        1680
+      ],
+      "id": "8483cb3e-8418-490d-b628-930235ae0355",
+      "name": "Split Out1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        460,
+        420
+      ],
+      "id": "3d03d032-02a4-426c-847b-ef43426b8c27",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-nano",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-NANO"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Tu trabajo es hacer parse al JSON que se te va a proporcionar\n\nJSON:\n\n {{ $json.output }}\n\nNo des anotaciones solo dame el parse"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        2440,
+        1760
+      ],
+      "id": "fc6b978e-1fca-474d-8801-6e38b41a46ff",
+      "name": "OpenAI2",
+      "credentials": {
+        "openAiApi": {
+          "id": "YjvWNPb8M83OV0I5",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.manychat.com/fb/sending/sendContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"subscriber_id\": {{ $('Webhook').item.json.body.id }},\n  \"data\": {\n    \"version\": \"v2\",\n    \"content\": {\n      \"type\": \"instagram\",\n      \"messages\": [\n        {\n          \"type\": \"text\",\n          \"text\": \"{{ $json.output }}\"\n        }\n      ]\n    }\n  },\n  \"message_tag\": \"ACCOUNT_UPDATE\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        1000
+      ],
+      "id": "700fae6f-005f-47f2-b2f1-ff94a9f0ed55",
+      "name": "HTTP Request2",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "paE8QC10dWtJOqpk",
+          "name": "Manychat"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        460,
+        820
+      ],
+      "id": "ab5bd0cd-8004-4c57-acfb-916221a411a4",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        860,
+        580
+      ],
+      "id": "d63b90dc-a97c-4245-9f6b-c6d4840870e7",
+      "name": "Wait1",
+      "webhookId": "8459dc06-5c7a-40ef-993d-08c52b967a6e"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        700,
+        1120
+      ],
+      "id": "2bef4019-8574-4183-ba80-bdb0784727fa",
+      "name": "Wait2",
+      "webhookId": "ed1ddbf0-010f-4341-b3b9-ce884fa85fc1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// Función para limpiar texto para ManyChat\nfunction cleanTextForManyChat(text) {\n  const textStr = typeof text === 'string' ? text : String(text);\n  return textStr\n    .replace(/\\n+/g, ' ')\n    .replace(/\"/g, '')\n    .replace(/\\s+/g, ' ')\n    .trim();\n}\n\n// Función para extraer JSON de texto que puede tener contenido adicional\nfunction extractJSON(text) {\n  try {\n    // Intentar parsear directamente primero\n    return JSON.parse(text);\n  } catch (error) {\n    // Si falla, buscar JSON dentro del texto\n    const jsonMatches = text.match(/\\{[^{}]*\\[[^\\]]*\\][^{}]*\\}/g) || \n                       text.match(/\\[[^\\]]*\\]/g);\n    \n    if (jsonMatches && jsonMatches.length > 0) {\n      try {\n        return JSON.parse(jsonMatches[0]);\n      } catch (parseError) {\n        throw new Error('No se pudo parsear el JSON encontrado');\n      }\n    }\n    throw new Error('No se encontró JSON válido en el texto');\n  }\n}\n\nconst processedItems = [];\n\nitems.forEach(item => {\n  const rawOutput = item.json.output;\n  \n  try {\n    // Intentar extraer y parsear el JSON\n    const parsedData = extractJSON(rawOutput);\n    let messages = [];\n    \n    // Determinar el formato del JSON parseado\n    if (Array.isArray(parsedData)) {\n      // Caso 1: Array directo [\"msg1\", \"msg2\"]\n      messages = parsedData;\n    } else if (parsedData.output && Array.isArray(parsedData.output)) {\n      // Caso 2: Objeto con array {output: [\"msg1\", \"msg2\"]}\n      messages = parsedData.output;\n    } else if (parsedData.messages && Array.isArray(parsedData.messages)) {\n      // Caso 3: Objeto con messages {messages: [\"msg1\", \"msg2\"]}\n      messages = parsedData.messages;\n    } else {\n      // Caso 4: Cualquier otro formato, convertir a string\n      messages = [JSON.stringify(parsedData)];\n    }\n    \n    // Procesar cada mensaje\n    if (messages.length > 0) {\n      messages.forEach((message, index) => {\n        processedItems.push({\n          json: {\n            output: cleanTextForManyChat(message),\n            messageIndex: index + 1,\n            totalMessages: messages.length,\n            originalItemIndex: items.indexOf(item),\n            parseStatus: 'success'\n          }\n        });\n      });\n    } else {\n      // Array vacío\n      processedItems.push({\n        json: {\n          output: \"Error: El agente devolvió un array vacío\",\n          messageIndex: 1,\n          totalMessages: 1,\n          originalItemIndex: items.indexOf(item),\n          parseStatus: 'empty_array'\n        }\n      });\n    }\n    \n  } catch (error) {\n    // Si no se puede parsear como JSON, tratar como texto plano\n    processedItems.push({\n      json: {\n        output: cleanTextForManyChat(rawOutput),\n        messageIndex: 1,\n        totalMessages: 1,\n        originalItemIndex: items.indexOf(item),\n        parseStatus: 'fallback_text',\n        parseError: error.message\n      }\n    });\n  }\n});\n\nreturn processedItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        420
+      ],
+      "id": "6487eb98-6dfa-43a5-97f6-30a75bc3c06c",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// Función para limpiar texto para ManyChat\nfunction cleanTextForManyChat(text) {\n  const textStr = typeof text === 'string' ? text : String(text);\n  return textStr\n    .replace(/\\n+/g, ' ')\n    .replace(/\"/g, '')\n    .replace(/\\s+/g, ' ')\n    .trim();\n}\n\n// Función para extraer JSON de texto que puede tener contenido adicional\nfunction extractJSON(text) {\n  try {\n    // Intentar parsear directamente primero\n    return JSON.parse(text);\n  } catch (error) {\n    // Si falla, buscar JSON dentro del texto\n    const jsonMatches = text.match(/\\{[^{}]*\\[[^\\]]*\\][^{}]*\\}/g) || \n                       text.match(/\\[[^\\]]*\\]/g);\n    \n    if (jsonMatches && jsonMatches.length > 0) {\n      try {\n        return JSON.parse(jsonMatches[0]);\n      } catch (parseError) {\n        throw new Error('No se pudo parsear el JSON encontrado');\n      }\n    }\n    throw new Error('No se encontró JSON válido en el texto');\n  }\n}\n\nconst processedItems = [];\n\nitems.forEach(item => {\n  const rawOutput = item.json.output;\n  \n  try {\n    // Intentar extraer y parsear el JSON\n    const parsedData = extractJSON(rawOutput);\n    let messages = [];\n    \n    // Determinar el formato del JSON parseado\n    if (Array.isArray(parsedData)) {\n      // Caso 1: Array directo [\"msg1\", \"msg2\"]\n      messages = parsedData;\n    } else if (parsedData.output && Array.isArray(parsedData.output)) {\n      // Caso 2: Objeto con array {output: [\"msg1\", \"msg2\"]}\n      messages = parsedData.output;\n    } else if (parsedData.messages && Array.isArray(parsedData.messages)) {\n      // Caso 3: Objeto con messages {messages: [\"msg1\", \"msg2\"]}\n      messages = parsedData.messages;\n    } else {\n      // Caso 4: Cualquier otro formato, convertir a string\n      messages = [JSON.stringify(parsedData)];\n    }\n    \n    // Procesar cada mensaje\n    if (messages.length > 0) {\n      messages.forEach((message, index) => {\n        processedItems.push({\n          json: {\n            output: cleanTextForManyChat(message),\n            messageIndex: index + 1,\n            totalMessages: messages.length,\n            originalItemIndex: items.indexOf(item),\n            parseStatus: 'success'\n          }\n        });\n      });\n    } else {\n      // Array vacío\n      processedItems.push({\n        json: {\n          output: \"Error: El agente devolvió un array vacío\",\n          messageIndex: 1,\n          totalMessages: 1,\n          originalItemIndex: items.indexOf(item),\n          parseStatus: 'empty_array'\n        }\n      });\n    }\n    \n  } catch (error) {\n    // Si no se puede parsear como JSON, tratar como texto plano\n    processedItems.push({\n      json: {\n        output: cleanTextForManyChat(rawOutput),\n        messageIndex: 1,\n        totalMessages: 1,\n        originalItemIndex: items.indexOf(item),\n        parseStatus: 'fallback_text',\n        parseError: error.message\n      }\n    });\n  }\n});\n\nreturn processedItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        60,
+        820
+      ],
+      "id": "115279a3-85c2-4ad0-9405-c5010df0559c",
+      "name": "Code3"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryManager",
+      "typeVersion": 1.1,
+      "position": [
+        -2340,
+        420
+      ],
+      "id": "0ccacc5d-9d94-4621-83be-f76e115c9b04",
+      "name": "Chat Memory Manager"
+    },
+    {
+      "parameters": {
+        "url": "https://api.cal.com/v1/booking-references",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "specifyQuery": "json",
+        "jsonQuery": "{\n  \"apiKey\": \"cal_live_adcc229be5221111c2790bb6777edf06\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2980,
+        1380
+      ],
+      "id": "0ec09f95-2cd3-4aa8-827b-50c37bb64f65",
+      "name": "HTTP Request5",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Q3Hap666F6y72utA",
+          "name": "CALCOM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.cal.com/v2/bookings/{bookingUid}/reschedule",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "cal-api-version",
+              "value": "2024-06-11"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3700,
+        1720
+      ],
+      "id": "44a582e2-faf5-4d02-baf0-c78166d4836f",
+      "name": "HTTP Request7",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Q3Hap666F6y72utA",
+          "name": "CALCOM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.cal.com/v2/bookings",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "status",
+              "value": "upcoming"
+            },
+            {
+              "name": "attendeeEmail",
+              "value": "={{ $fromAI(\"email\") }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "cal-api-version",
+              "value": "2024-06-11"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3340,
+        1720
+      ],
+      "id": "57712cb6-049c-4667-b130-1645ec770b75",
+      "name": "VER TODOS",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Q3Hap666F6y72utA",
+          "name": "CALCOM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.manychat.com/fb/sending/sendContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"subscriber_id\": {{ $('Webhook').item.json.body.id }},\n  \"data\": {\n    \"version\": \"v2\",\n    \"content\": {\n      \"type\": \"instagram\",\n      \"messages\": [\n        {\n          \"type\": \"image\",\n          \"url\": \"https://i.ibb.co/JWTwqTtH/imagen.png\"\n        }\n      ]\n    }\n  },\n  \"message_tag\": \"ACCOUNT_UPDATE\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2940,
+        1980
+      ],
+      "id": "de2987be-2d14-4467-9eae-f153d8533dde",
+      "name": "HTTP Request6",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "paE8QC10dWtJOqpk",
+          "name": "Manychat"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## INPUT Y MEMORIA",
+        "height": 760,
+        "width": 1380
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2620,
+        -180
+      ],
+      "id": "34bd54e5-bacb-48ed-9adb-503a303bed4c",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## TRANSFORMACIÓN DE TEXTO",
+        "height": 760,
+        "width": 1380,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -960,
+        -420
+      ],
+      "id": "1f94aae2-1ccc-4ec4-ba7d-c98f29626564",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "description": "Usa esta herramienta para reagendar cita o cancelar",
+        "workflowId": {
+          "__rl": true,
+          "value": "zLTNTnnvrekcrxTI",
+          "mode": "list",
+          "cachedResultName": "cambioCIta"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "objetivo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('objetivo', ``, 'string') }}",
+            "email": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('email', ``, 'string') }}",
+            "name": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('name', ``, 'string') }}",
+            "rescheduleDate": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('rescheduleDate', ``, 'string') }}",
+            "cancelDate": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('cancelDate', ``, 'string') }}",
+            "reason": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('reason', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "objetivo",
+              "displayName": "objetivo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "rescheduleDate",
+              "displayName": "rescheduleDate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "cancelDate",
+              "displayName": "cancelDate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "reason",
+              "displayName": "reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -140,
+        620
+      ],
+      "id": "2824d8c4-9892-4212-9e3c-3924fd046747",
+      "name": "REAGENDAR"
+    },
+    {
+      "parameters": {
+        "content": "## AGENTES IA",
+        "height": 760,
+        "width": 1600,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1200,
+        380
+      ],
+      "id": "821246a3-ec05-47f3-ac02-4472e10be0e7",
+      "name": "Sticky Note2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "POLICIA",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "AGENDADOR",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "CONVERSACIÓN",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "CONVERSACIÓN",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AGENDADOR",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "CONVERSACIÓN",
+            "type": "ai_memory",
+            "index": 0
+          },
+          {
+            "node": "AGENDADOR",
+            "type": "ai_memory",
+            "index": 0
+          },
+          {
+            "node": "POLICIA",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POLICIA": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "DISPONIBILIDAD": {
+      "ai_tool": [
+        [
+          {
+            "node": "AGENDADOR",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AGENDAR": {
+      "ai_tool": [
+        [
+          {
+            "node": "AGENDADOR",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Think": {
+      "ai_tool": [
+        [
+          {
+            "node": "AGENDADOR",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "CONVERSACIÓN",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CONVERSACIÓN": {
+      "main": [
+        [
+          {
+            "node": "Code3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        []
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AGENDADOR": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Insertar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insertar": {
+      "main": [
+        [
+          {
+            "node": "CACHAR INFO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CACHAR INFO": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Redis",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "CACHAR INFO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sort": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "POLICIA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request3": {
+      "main": [
+        [
+          {
+            "node": "Switch2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch2": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "OpenAI1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request4": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Sort",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields6": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields7": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call n8n Workflow Tool": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        []
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        []
+      ]
+    },
+    "Split Out1": {
+      "main": [
+        []
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI2": {
+      "main": [
+        []
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code3": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "REAGENDAR": {
+      "ai_tool": [
+        [
+          {
+            "node": "AGENDADOR",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "98ccfe7a-839b-48ed-b279-c26dc2cb13cb",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9e2f848261bc98db2d81ef9f6bc227e44dd7bcb32dc67342f351eea9930b0a64"
+  },
+  "id": "2rhYEHzc8hhA3yOr",
+  "tags": [
+    {
+      "createdAt": "2025-02-18T05:56:42.373Z",
+      "updatedAt": "2025-02-18T05:56:42.373Z",
+      "id": "yeepLHUVsKDe0Hys",
+      "name": "MAIN"
+    }
+  ]
+}

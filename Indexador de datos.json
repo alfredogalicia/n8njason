@@ -1,0 +1,544 @@
+{
+  "name": "Indexador de datos",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -1888,
+        160
+      ],
+      "id": "f40ef75b-21dc-4462-86cb-91949efdabea",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3a4ddc58-c303-4e51-80e3-4077dcba7e7d",
+              "name": "id",
+              "value": "={{ $('Google Drive Trigger1').item.json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "f4438fa1-1b0b-4058-b387-15f512b665a7",
+              "name": "nombre",
+              "value": "={{ $('Google Drive Trigger1').item.json.name }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1616,
+        176
+      ],
+      "id": "e877664b-1218-4ab0-a9b2-fe85b0fd7783",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "425f73f4-1f70-4bb2-b708-a400c61a2af0",
+                    "leftValue": "={{ $json.nombre }}",
+                    "rightValue": "pdf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "PDF"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "09f64b2b-2e3c-4aa7-8537-175a24958a26",
+                    "leftValue": "={{ $json.nombre }}",
+                    "rightValue": "xlsx",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "XLSX"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -1264,
+        176
+      ],
+      "id": "2f0fc025-7549-4c7d-861c-3a952633abfe",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -1056,
+        16
+      ],
+      "id": "3721a8d7-2c17-464e-ae49-07cd0114df99",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -1056,
+        256
+      ],
+      "id": "e3771dc8-868b-4fb6-8888-33cdd72f0ef9",
+      "name": "Extract from File1"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -896,
+        256
+      ],
+      "id": "d1cdb9d5-6d28-4009-abac-b069ba0dfc4e",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "fieldsToSummarize": {
+          "values": [
+            {
+              "aggregation": "concatenate",
+              "field": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.summarize",
+      "typeVersion": 1.1,
+      "position": [
+        -752,
+        256
+      ],
+      "id": "df893430-276a-4002-9e51-d356deb2408b",
+      "name": "Summarize"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -544,
+        416
+      ],
+      "id": "7f58a61c-eab5-423c-8e57-23d9ce99475a",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "rCZwCYBRfn8Ka08u",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonMode": "expressionData",
+        "jsonData": "={{ $json.data || $json.text || $json.concatenated_data }}",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "id",
+                "value": "={{ $('Edit Fields').item.json.id }}"
+              },
+              {
+                "name": "nombre",
+                "value": "={{ $('Edit Fields').item.json.nombre }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1,
+      "position": [
+        -384,
+        256
+      ],
+      "id": "63f95749-b8fa-48a7-bb27-8749442dc5c5",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "chunkSize": 300,
+        "chunkOverlap": 50,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        -256,
+        432
+      ],
+      "id": "b14e160d-4e9e-4544-9238-8462ab575c10",
+      "name": "Recursive Character Text Splitter"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1cQ1sOyq2sLOWGnWN_vmEaReQ66DeiIRN",
+          "mode": "list",
+          "cachedResultName": "RAG",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1cQ1sOyq2sLOWGnWN_vmEaReQ66DeiIRN"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2144,
+        160
+      ],
+      "id": "df9fc563-7735-4aff-b199-7a401abb5e2e",
+      "name": "Google Drive Trigger1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "TkWlfvpcAicsmsD1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1,
+      "position": [
+        -416,
+        16
+      ],
+      "id": "05d0e48b-66a1-4563-a858-b346b8fe5769",
+      "name": "Supabase Vector Store2",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4nnBE0NaV9juAXAO",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## 🚀 Guía rápida: Chunk Size y Chunk Overlap\n\nReglas prácticas para elegir **tamaño de chunks y solapamiento** al procesar textos para embeddings o análisis:\n\n---\n\n### 🪐 **1️⃣ Texto corto (FAQs, tweets)**\n\n- **Chunk Size:** `100-200`\n- **Chunk Overlap:** `20-30`\n\n---\n\n### 📘 **2️⃣ Documentos medianos (manuales, posts)**\n\n- **Chunk Size:** `300-400`\n- **Chunk Overlap:** `50-60`\n\n---\n\n### 📄 **3️⃣ PDFs largos / contratos**\n\n- **Chunk Size:** `500-800`\n- **Chunk Overlap:** `60-100`\n\n---\n\n### 🛠️ **4️⃣ Código / JSON**\n\n- **Segmenta por bloques lógicos:** funciones, objetos o secciones claras.  \n- **Usa *sentinel tokens* en lugar de solapamiento ciego.**\n\n---\n\n**✨ Tip:** Ajusta estos valores según la granularidad que necesites y el modelo que utilices.",
+        "height": 924,
+        "width": 596,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        176,
+        -32
+      ],
+      "id": "6d64cd37-73c8-4b1b-b862-ed03a6f60a2a",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## 📝 Recordatorio\n\nAquí puedes subir todos los documentos que necesites.\n\nEn este caso, **con PDF y XLSX es suficiente** para continuar.",
+        "height": 448,
+        "width": 180,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1312,
+        -96
+      ],
+      "id": "658e21f5-a519-45c8-be07-3b4a3da4e666",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -32,
+        448
+      ],
+      "id": "48e32ab3-739b-4142-ac6b-6598db6f93fd",
+      "name": "Wait",
+      "webhookId": "8dc959ba-b391-402b-bc45-0b16abee47ef"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1440,
+        176
+      ],
+      "id": "d53f9f61-05ec-4ed6-8c0f-66daec4c07d1",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "TkWlfvpcAicsmsD1",
+          "name": "Google Drive account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from File1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Summarize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize": {
+      "main": [
+        [
+          {
+            "node": "Supabase Vector Store2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store2",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Supabase Vector Store2",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Supabase Vector Store2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store2": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "49990eea-3ab4-4069-bd62-c54a7b2416f0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "442955a7b58f53b598864f7daeb8cdba2ecbee20517cbd78117aad4c9363cde5"
+  },
+  "id": "pxcC4QUEzcFl1bak",
+  "tags": []
+}

@@ -1,0 +1,1393 @@
+{
+  "name": "Messenger",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "388f212d-f27d-4742-9020-3bbac2c90bd2",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "a7da14d6-ca4d-449b-9c1e-40ec6a660385",
+      "name": "Webhook",
+      "webhookId": "388f212d-f27d-4742-9020-3bbac2c90bd2"
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "={{ $('Edit Fields').item.json.body.key }}",
+        "messageData": "={{ JSON.stringify($('Edit Fields').item.json.body) }}",
+        "tail": true
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        320,
+        384
+      ],
+      "id": "b1150e40-ccff-4ffd-9331-5fd53c50b555",
+      "name": "Insertar",
+      "credentials": {
+        "redis": {
+          "id": "aDRIgcERHdaifMpr",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "35e1061d-69e7-4800-a6ab-42de43f71524",
+              "name": "body.key",
+              "value": "={{ $json.body.key }}",
+              "type": "string"
+            },
+            {
+              "id": "3faa58fb-b3fd-443e-83df-45c1d542806f",
+              "name": "body",
+              "value": "={{ $json.body }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        112,
+        304
+      ],
+      "id": "d619aa74-7420-4e70-887c-da3b34245990",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "mensaje",
+        "key": "={{ $('Edit Fields').item.json.body.key }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        544,
+        400
+      ],
+      "id": "eb3e16fd-073b-4b84-b690-479ecdfaa541",
+      "name": "CACHAR INFO",
+      "credentials": {
+        "redis": {
+          "id": "aDRIgcERHdaifMpr",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ JSON.parse($json.mensaje.last()).key }}",
+                    "rightValue": "={{ $('Edit Fields').item.json.body.key }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEquals"
+                    },
+                    "id": "342f8e42-f993-40d8-9188-5b501338a035"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "NADA"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "dee9248c-bc58-4d0d-80f4-eba8bafba419",
+                    "leftValue": "={{ JSON.parse($json.mensaje.last()).last_interaction }}",
+                    "rightValue": "={{ $now.minus(15,'seconds') }}",
+                    "operator": {
+                      "type": "dateTime",
+                      "operation": "before"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "AGARRAR"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f1515c3b-6a0a-463a-a3e9-171eed40ecb6",
+                    "leftValue": "={{ JSON.parse($json.mensaje.first()).key }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notExists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "NO EXISTE"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "POLICIA"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        848,
+        432
+      ],
+      "id": "0ed5cefe-dbf2-44db-8342-df09cd558404",
+      "name": "Switch",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1088,
+        608
+      ],
+      "id": "5c11e75f-4dad-43d9-b835-e5148542405e",
+      "name": "Wait",
+      "webhookId": "87f03034-d870-4b31-904f-3bfbc59091ce"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ $('Edit Fields').item.json.body.key }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1152,
+        432
+      ],
+      "id": "bed81a32-52e6-43cc-8aca-5733d240d7d5",
+      "name": "Redis",
+      "credentials": {
+        "redis": {
+          "id": "aDRIgcERHdaifMpr",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "mensaje",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1376,
+        480
+      ],
+      "id": "822e960b-9ea8-4538-8a60-adaf4d8981c1",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0d1729a1-0e28-425e-a8c0-a7e945d919ec",
+              "name": "mensaje",
+              "value": "={{ $json.last_input_text }}",
+              "type": "string"
+            },
+            {
+              "id": "5ef4a455-4c16-4328-8569-3c5ebced96b0",
+              "name": "hora_llegada",
+              "value": "={{ $json.last_interaction }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1776,
+        480
+      ],
+      "id": "724dc5ca-679c-4b85-8618-5edb26b4bd8e",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "hora_llegada"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        2032,
+        480
+      ],
+      "id": "c94d4c90-4b17-427f-9860-2256d032e494",
+      "name": "Sort"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "mensaje"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2176,
+        288
+      ],
+      "id": "8e45dd73-56fe-477f-a0bd-321d4e34dd92",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9bc6147a-2246-4d74-833b-bc694f075aeb",
+              "name": "Input",
+              "value": "={{ $json.mensaje.join(\" \") }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1648,
+        720
+      ],
+      "id": "2b4cbe90-bdda-4b31-9070-eade70eee4c0",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ JSON.parse($json.mensaje) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1552,
+        480
+      ],
+      "id": "4f4666fb-9079-4271-9475-0d520e7c8702",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1008,
+        208
+      ],
+      "id": "ebbbaf74-73f3-4bbe-9f3f-affcff8aa984",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1072,
+        912
+      ],
+      "id": "b36e8732-dca2-44d0-ac1e-516dea9d3330",
+      "name": "No Operation, do nothing1"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.1,
+      "position": [
+        2816,
+        1408
+      ],
+      "id": "f4da3e00-7174-4a7c-98a0-7ea90b294ae8",
+      "name": "Call n8n Workflow Tool",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "[\n  \"¡Hola! Claro\",\n  \"Ofrecemos varios servicios\", \n  \"¿Cuál es tu objetivo principal al buscar automatización con IA?\"\n]"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        3216,
+        912
+      ],
+      "id": "5652dd35-29b7-4c52-989f-add97f6d947f",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "[\n  \"¡Hola! Claro\",\n  \"Ofrecemos varios servicios\", \n  \"¿Cuál es tu objetivo principal al buscar automatización con IA?\"\n]"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        3360,
+        1312
+      ],
+      "id": "6b696eec-d6f5-43cc-9456-e8b978ab31d1",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        3520,
+        672
+      ],
+      "id": "5cbd78ce-9ebd-4727-9bc5-ba8703b31041",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        3520,
+        1072
+      ],
+      "id": "2669c85f-70f9-4d3b-8170-62bb73694b33",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3920,
+        832
+      ],
+      "id": "6d5e1e25-8211-4558-9664-19edbf2588d1",
+      "name": "Wait1",
+      "webhookId": "8459dc06-5c7a-40ef-993d-08c52b967a6e"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3760,
+        1376
+      ],
+      "id": "73546c3b-0b5b-4053-9228-98b75510fe87",
+      "name": "Wait2",
+      "webhookId": "ed1ddbf0-010f-4341-b3b9-ce884fa85fc1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// Función para limpiar texto para ManyChat\nfunction cleanTextForManyChat(text) {\n  const textStr = typeof text === 'string' ? text : String(text);\n  return textStr\n    .replace(/\\n+/g, ' ')\n    .replace(/\"/g, '')\n    .replace(/\\s+/g, ' ')\n    .trim();\n}\n\n// Función para extraer JSON de texto que puede tener contenido adicional\nfunction extractJSON(text) {\n  try {\n    // Intentar parsear directamente primero\n    return JSON.parse(text);\n  } catch (error) {\n    // Si falla, buscar JSON dentro del texto\n    const jsonMatches = text.match(/\\{[^{}]*\\[[^\\]]*\\][^{}]*\\}/g) || \n                       text.match(/\\[[^\\]]*\\]/g);\n    \n    if (jsonMatches && jsonMatches.length > 0) {\n      try {\n        return JSON.parse(jsonMatches[0]);\n      } catch (parseError) {\n        throw new Error('No se pudo parsear el JSON encontrado');\n      }\n    }\n    throw new Error('No se encontró JSON válido en el texto');\n  }\n}\n\nconst processedItems = [];\n\nitems.forEach(item => {\n  const rawOutput = item.json.output;\n  \n  try {\n    // Intentar extraer y parsear el JSON\n    const parsedData = extractJSON(rawOutput);\n    let messages = [];\n    \n    // Determinar el formato del JSON parseado\n    if (Array.isArray(parsedData)) {\n      // Caso 1: Array directo [\"msg1\", \"msg2\"]\n      messages = parsedData;\n    } else if (parsedData.output && Array.isArray(parsedData.output)) {\n      // Caso 2: Objeto con array {output: [\"msg1\", \"msg2\"]}\n      messages = parsedData.output;\n    } else if (parsedData.messages && Array.isArray(parsedData.messages)) {\n      // Caso 3: Objeto con messages {messages: [\"msg1\", \"msg2\"]}\n      messages = parsedData.messages;\n    } else {\n      // Caso 4: Cualquier otro formato, convertir a string\n      messages = [JSON.stringify(parsedData)];\n    }\n    \n    // Procesar cada mensaje\n    if (messages.length > 0) {\n      messages.forEach((message, index) => {\n        processedItems.push({\n          json: {\n            output: cleanTextForManyChat(message),\n            messageIndex: index + 1,\n            totalMessages: messages.length,\n            originalItemIndex: items.indexOf(item),\n            parseStatus: 'success'\n          }\n        });\n      });\n    } else {\n      // Array vacío\n      processedItems.push({\n        json: {\n          output: \"Error: El agente devolvió un array vacío\",\n          messageIndex: 1,\n          totalMessages: 1,\n          originalItemIndex: items.indexOf(item),\n          parseStatus: 'empty_array'\n        }\n      });\n    }\n    \n  } catch (error) {\n    // Si no se puede parsear como JSON, tratar como texto plano\n    processedItems.push({\n      json: {\n        output: cleanTextForManyChat(rawOutput),\n        messageIndex: 1,\n        totalMessages: 1,\n        originalItemIndex: items.indexOf(item),\n        parseStatus: 'fallback_text',\n        parseError: error.message\n      }\n    });\n  }\n});\n\nreturn processedItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3136,
+        672
+      ],
+      "id": "fb9df120-6034-4f65-b434-1af3e1f34103",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// Función para limpiar texto para ManyChat\nfunction cleanTextForManyChat(text) {\n  const textStr = typeof text === 'string' ? text : String(text);\n  return textStr\n    .replace(/\\n+/g, ' ')\n    .replace(/\"/g, '')\n    .replace(/\\s+/g, ' ')\n    .trim();\n}\n\n// Función para extraer JSON de texto que puede tener contenido adicional\nfunction extractJSON(text) {\n  try {\n    // Intentar parsear directamente primero\n    return JSON.parse(text);\n  } catch (error) {\n    // Si falla, buscar JSON dentro del texto\n    const jsonMatches = text.match(/\\{[^{}]*\\[[^\\]]*\\][^{}]*\\}/g) || \n                       text.match(/\\[[^\\]]*\\]/g);\n    \n    if (jsonMatches && jsonMatches.length > 0) {\n      try {\n        return JSON.parse(jsonMatches[0]);\n      } catch (parseError) {\n        throw new Error('No se pudo parsear el JSON encontrado');\n      }\n    }\n    throw new Error('No se encontró JSON válido en el texto');\n  }\n}\n\nconst processedItems = [];\n\nitems.forEach(item => {\n  const rawOutput = item.json.output;\n  \n  try {\n    // Intentar extraer y parsear el JSON\n    const parsedData = extractJSON(rawOutput);\n    let messages = [];\n    \n    // Determinar el formato del JSON parseado\n    if (Array.isArray(parsedData)) {\n      // Caso 1: Array directo [\"msg1\", \"msg2\"]\n      messages = parsedData;\n    } else if (parsedData.output && Array.isArray(parsedData.output)) {\n      // Caso 2: Objeto con array {output: [\"msg1\", \"msg2\"]}\n      messages = parsedData.output;\n    } else if (parsedData.messages && Array.isArray(parsedData.messages)) {\n      // Caso 3: Objeto con messages {messages: [\"msg1\", \"msg2\"]}\n      messages = parsedData.messages;\n    } else {\n      // Caso 4: Cualquier otro formato, convertir a string\n      messages = [JSON.stringify(parsedData)];\n    }\n    \n    // Procesar cada mensaje\n    if (messages.length > 0) {\n      messages.forEach((message, index) => {\n        processedItems.push({\n          json: {\n            output: cleanTextForManyChat(message),\n            messageIndex: index + 1,\n            totalMessages: messages.length,\n            originalItemIndex: items.indexOf(item),\n            parseStatus: 'success'\n          }\n        });\n      });\n    } else {\n      // Array vacío\n      processedItems.push({\n        json: {\n          output: \"Error: El agente devolvió un array vacío\",\n          messageIndex: 1,\n          totalMessages: 1,\n          originalItemIndex: items.indexOf(item),\n          parseStatus: 'empty_array'\n        }\n      });\n    }\n    \n  } catch (error) {\n    // Si no se puede parsear como JSON, tratar como texto plano\n    processedItems.push({\n      json: {\n        output: cleanTextForManyChat(rawOutput),\n        messageIndex: 1,\n        totalMessages: 1,\n        originalItemIndex: items.indexOf(item),\n        parseStatus: 'fallback_text',\n        parseError: error.message\n      }\n    });\n  }\n});\n\nreturn processedItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3120,
+        1072
+      ],
+      "id": "1804de20-d6d6-4269-9358-eb132f3f7883",
+      "name": "Code3"
+    },
+    {
+      "parameters": {
+        "description": "Usa esta herramienta para reagendar cita o cancelar",
+        "workflowId": {
+          "__rl": true,
+          "value": "zLTNTnnvrekcrxTI",
+          "mode": "list",
+          "cachedResultName": "cambioCIta"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "objetivo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('objetivo', ``, 'string') }}",
+            "email": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('email', ``, 'string') }}",
+            "name": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('name', ``, 'string') }}",
+            "rescheduleDate": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('rescheduleDate', ``, 'string') }}",
+            "cancelDate": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('cancelDate', ``, 'string') }}",
+            "reason": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('reason', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "objetivo",
+              "displayName": "objetivo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "rescheduleDate",
+              "displayName": "rescheduleDate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "cancelDate",
+              "displayName": "cancelDate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "reason",
+              "displayName": "reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        2928,
+        864
+      ],
+      "id": "f94e911d-f9a1-47af-9210-e8ac2e99ccf9",
+      "name": "REAGENDAR"
+    },
+    {
+      "parameters": {
+        "content": "## AGENTES IA",
+        "height": 760,
+        "width": 1600,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1856,
+        624
+      ],
+      "id": "ad936c80-196d-4df1-a480-dcf9e37783dc",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.1,
+      "position": [
+        1808,
+        1168
+      ],
+      "id": "58a7958b-5f3b-41b5-8759-5a85b3d60a2e",
+      "name": "OpenAI Chat Model3",
+      "credentials": {
+        "openAiApi": {
+          "id": "OaQtMTxrf8ltE6WW",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f08493f0-5a28-4a67-86c5-c4742909b4f2",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "RESERVA",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2336,
+        736
+      ],
+      "id": "fed4f7c7-fba8-4a00-a3cb-1dca21b90366",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "model": "gpt-4.1-mini",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.1,
+      "position": [
+        2656,
+        1264
+      ],
+      "id": "06d18811-5a53-45f3-a440-b02bab037ec9",
+      "name": "OpenAI Chat Model4",
+      "credentials": {
+        "openAiApi": {
+          "id": "OaQtMTxrf8ltE6WW",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "gpt-4.1-mini",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.1,
+      "position": [
+        2624,
+        816
+      ],
+      "id": "16e56c78-6d14-4b02-bd43-fba67300868c",
+      "name": "OpenAI Chat Model5",
+      "credentials": {
+        "openAiApi": {
+          "id": "OaQtMTxrf8ltE6WW",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Webhook').item.json.body.key }}",
+        "contextWindowLength": 15
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        2336,
+        1152
+      ],
+      "id": "365d10ef-23d7-4039-a1a7-543596623cc0",
+      "name": "Postgres Chat Memory1",
+      "credentials": {
+        "postgres": {
+          "id": "PQ5E6rc6UqTloTzI",
+          "name": "trans"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.Input }}",
+        "options": {
+          "systemMessage": "=# 🧠 Sistema de Detección de Intenciones\n\nEres un sistema experto que determina si el usuario quiere continuar con el proceso de reservación de citas o cambiar a conversación general.\n\n## 🚦 REGLA PRINCIPAL (Aplica SIEMPRE primero):\n\n**RESERVA automática para**:\n- Cancelar citas: \"Cancela mi cita\", \"Quiero cancelar\", \"Cancelar cita del X\"\n- Reagendar citas: \"Cambiar mi cita\", \"Reagendar para otro día\"\n- Consultar/modificar citas existentes\n\n## 📋 Categorías de Intención:\n\n**RESERVA**: El usuario está:\n- Iniciando una nueva cita\n- Solicitando horarios disponibles\n- **CANCELANDO o REAGENDANDO una cita existente**\n- Proporcionando datos para agendar (nombre, correo, fecha, hora)\n- Corrigiendo información de cita en proceso\n- Pidiendo horarios específicos (mañana, tarde, noche)\n- Respondiendo preguntas del filtro previo\n\n**CONVERSACIÓN**: Preguntas generales, temas no relacionados con citas, información general, chistes, etc.\n\n## ⚠️ Reglas de Aplicación:\n\n1. **Prioridad absoluta**: Cualquier mención de cancelar/reagendar = RESERVA\n2. **Contexto activo**: Si hay proceso de agendamiento en curso, mantener RESERVA\n3. **Análisis del historial completo**: Analiza todo el historial para identificar si hay un proceso de agendamiento activo. No tomes decisiones basadas únicamente en una frase aislada si el contexto indica que el usuario está siguiendo el flujo de cita\n4. **Mantenimiento del flujo**: NO se permite redirigir al bot de preguntas si la intención principal sigue siendo agendar. Si el usuario hace una pregunta ambigua pero está en medio del proceso de agendamiento, responde RESERVA para mantener el flujo y evitar interrupciones\n5. **Cambio explícito**: Solo CONVERSACIÓN si claramente cambia de tema sin relación a citas\n\n## 🧪 Ejemplos:\n\n- \"Puedes cancelar mi cita del 18 de agosto\" → **RESERVA**\n- \"Quiero cancelar mi cita\" → **RESERVA** \n- \"Necesito reagendar para otro día\" → **RESERVA**\n- \"¿Tienen algo al mediodía?\" → **RESERVA**\n- \"Mi presupuesto es de 1500 USD\" (en filtro) → **RESERVA**\n- \"¿Qué opinas del clima?\" (sin proceso activo) → **CONVERSACIÓN**\n\n**RESPUESTA**: Una sola palabra: `RESERVA` o `CONVERSACIÓN`"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        1920,
+        832
+      ],
+      "id": "1657325b-a3c9-40c5-a9b7-f69690ecfdc7",
+      "name": "POLICIA1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Edit Fields2').item.json.Input }}",
+        "options": {
+          "systemMessage": "=<agentPrompt>\n  <context>\n    Eres el asistente de Santiago, creador de contenido sobre automatización e inteligencia artificial usando herramientas como Make y n8n.\n    Tu rol es ayudar a personas interesadas en los servicios de automatización de su agencia y su comunidad educativa Horizontes IA (también conocida como curso).\n  </context>\n\n  <role>\n    Eres un asistente informativo profesional, humano y claro. Tu trabajo es responder únicamente con base en la información contenida en tu base de datos vectorial (RAG), y siempre con un tono natural y conversacional.\n  </role>\n\n  <tools>\ncompanyKnowledge: Es una base de datos vectorial con toda la informacion de Horizontes IA\n  </tools>\n\n  <services>\n    <condition>\n      Si alguien pregunta si ofrecen servicios de automatización:\n    </condition>\n    <response>\n      ¡Holaa! Sí, aparte de la comunidad tambien trabajamos con proyectos de automatización con IA como los que viste en los videos. Solo como aviso, manejamos proyectos arriba de $1000 USD por temas de disponibilidad. ¿Te gustaría agendar una llamada para ver si podemos ayudarte? o quieres que te cuente mas sobre la comunidad\n    </response>\n    <nextStep>\n      Si el usuario acepta, inicia el flujo de agendamiento. Si no, continúa resolviendo dudas sobre Horizontes IA.\n    </nextStep>\n  </services>\n\n  <goals>\n    <item>Contenido del curso/comunidad Horizontes IA</item>\n    <item>Herramientas enseñadas (Make.com, n8n, Airtable, etc.)</item>\n    <item>Plantillas, módulos, automatizaciones</item>\n    <item>Concursos, clases, beneficios, precios</item>\n    <item>Acceso, clases en vivo, dinámica</item>\n    <item>Preguntas frecuentes contenidas en la base RAG</item>\n  </goals>\n\n  <ragRule>\n    Siempre consulta la base vectorial antes de responder. Si no tienes una respuesta clara, no inventes. Usa respuestas como:\n    <example>\n      Esa info no la tengo a la mano, pero puedes checar más en nuestro sitio: https://iahorizontesacademy.com\n    </example>\n    Si es un caso más complejo:\n    <example>\n      Podemos verlo en llamada si lo prefieres. ¿Te gustaría agendar una cita?\n    </example>\n  </ragRule>\n\n  <courseAlias>\n    Si alguien menciona “curso”, “comunidad” o “programa”, respóndelo como sinónimos:\n    <example>\n       La comunidad (que también es el curso) incluye tanto videos educativos como automatizaciones listas para usar y 2 clases en vivo cada semana. Todo está dentro de la misma membresía.\n    </example>\n  </courseAlias>\n\n  <videoSystem>\n    Si alguien pide un sistema de algún video:\n    <example>\n      Ese sistema está incluido en la comunidad. Al unirte, tienes acceso a todas las plantillas y flujos que muestro en los videos.\n    </example>\n  </videoSystem>\n\n  <contact>\n    <response>\n      ¡Claro! Puedes escribirnos directamente a nuestro correo: contacto@innovandohorizontes.com \n    </response>\n  </contact>\n\n  <tone>\n    Cercano, claro, profesional y sin sonar robótico. Usa emojis si aportan claridad o calidez. Evita lenguaje corporativo o técnico innecesario.\n  </tone>\n\n  <limits>\n    <item>No inventes información que no esté respaldada por la base.</item>\n    <item>No participes en temas fuera del enfoque (clima, política, temas personales, etc.).</item>\n    <item>Redirígelo al sitio web si es necesario.</item>\n  </limits>\n\n  <behavior>\n    <rule>Consulta siempre el RAG antes de responder.</rule>\n    <rule>Si la pregunta es ambigua, pide una aclaración educada.</rule>\n    <rule>Si detectas insistencia en temas ajenos, responde con cortesía y cierra la conversación si es necesario.</rule>\n  </behavior>\n\n  <staticInfo>\n    <price>$50 USD mensuales</price>\n    <payment>Solo se aceptan tarjetas de credito</payment>\n    <tools>Make.com, n8n</tools>\n    <site>https://iahorizontesacademy.com</site>\n    <email>contacto@innovandohorizontes.com</email>\n  </staticInfo>\n\n  <personaRules>\n    <firstPerson>Tu respuestas tienen que estar en primera persona como si fueras santiago</firstPerson>\n    <personalQuestions>\n      Si te preguntan algo personal o te felicitan responde con sarcasmo diciendo que eres la IA de santi pero que muchas gracias y le pasaras este mensaje a santi para que te responda \n    </personalQuestions>\n    <sarcasmAllowed>\n      Tu tienes libertad de cambiar los ejemplos que te di dandoles mas sarcasmo siempre y cuando se entienda y no se salga del tema\n    </sarcasmAllowed>\n    <noEmojis>No uses emojis</noEmojis>\n    <clientCountQuestion>\n      Si te preguntan algo de Santi personal o como \"cuantos clientes has tenido\", responde con algo sarcastico como mmm pues habra que preguntarle a Santi la verdad yo soy su IA \n    </clientCountQuestion>\n    <learningQuestion>\n      Si te preguntan como aprender o algo similar hablales brevemente y no vendiendo sobre la comunidad\n    </learningQuestion>\n    <liveClassInfo>\n      La dinamica de las clases en vivo por si preguntan es:\n\n      Una es el jueves a las 9pm hora mexico y ese es un workshop donde se responden dudas, y el domingo a mediodia hora mexicoes una masterclass donde vemos una automatizacion desde 0. Ambas clases se graban\n    </liveClassInfo>\n    <platformInfo>\n      La comunidad esta en la plataforma Skool, si preguntan por discord diles que ya no esta disponible.\n    </platformInfo>\n    <noPushJoin>\n      Tu no debes intentar agregar a nadie a Horizontes IA, si preguntan por ingresar solo dales el sitio web https://iahorizontesacademy.com\n    </noPushJoin>\n<faq>\n  <question>¿Cuánto dura el acceso?</question>\n  <answer>Es una membresía mensual. Mientras sigas suscrito, tienes acceso completo a todos los contenidos y clases.</answer>\n\n  <question>¿Puedo ver las clases si no asisto en vivo?</question>\n  <answer>Sí, todas las clases se graban y se suben dentro de la plataforma Skool.</answer>\n\n  <question>¿Necesito conocimientos previos para entrar?</question>\n  <answer>No, todo empieza desde cero y avanzamos poco a poco. Hay tutoriales paso a paso para cada herramienta.</answer>\n\n  <question>¿Puedo cancelar en cualquier momento?</question>\n  <answer>Sí, puedes cancelar la membresía cuando quieras desde la misma plataforma.</answer>\n\n  <question>¿Qué herramientas necesito para aprovecharlo?</question>\n  <answer>Make.com, n8n, Airtable, y ganas de automatizar. Muchas son gratuitas o tienen versión freemium.</answer>\n</faq>\n<faq>\n  <question>¿Hay soporte si me atoro?</question>\n  <answer>Sí, puedes preguntar en la comunidad y también en las clases en vivo. Siempre alguien te va a echar la mano.</answer>\n\n  <question>¿Hay algún grupo privado o chat?</question>\n  <answer>Todo está centralizado en Skool. Ahí están los foros, clases y materiales.</answer>\n</faq>\n\n  </personaRules>\n</agentPrompt>\n\nTrata de no saltar parrafos\nNo digas Make.com siempre di solo Make sin el .com\n\nLa academia siempre va a costar $50 aunque ellos te digan otra cosa\n\nTrata de hacer los mensajes lo mas humanos, no tan largos\n\n📤 Formato de Respuesta OBLIGATORIO:\nSIEMPRE responde con este formato JSON exacto, sin excepciones:\n\nCuando tengas mensajes muy largos partelos en distintos items pero que sigan la coherencia uno despues del otro\n\n[\n  \"¡Hola! Claro\",\n  \"Ofrecemos varios servicios\", \n  \"¿Cuál es tu objetivo principal al buscar automatización con IA?\"\n]\n\nIMPORTANTE: Nunca devuelvas texto plano, siempre este formato JSON."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        2640,
+        1072
+      ],
+      "id": "be51eaa9-e415-4574-94f2-c0f48fb14967",
+      "name": "CONVERSACIÓN1"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Responsable de recuperar todos los espacios de citas libres disponibles de la base de datos.",
+        "url": "https://api.cal.com/v1/slots",
+        "sendQuery": true,
+        "specifyQuery": "json",
+        "jsonQuery": "={\n  \"startTime\": \"{startTime}\",\n  \"endTime\": \"{endTime}\",\n  \"eventTypeId\": \"2401140\",\n  \"timeZone\": \"America/Mexico_City\",\n  \"apiKey\": \"cal_live_adcc229be5221111c2790bb6777edf06\"\n}",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "startTime",
+              "description": "Cadena de fecha de inicio desde la que se obtienen las franjas horarias, con formato ISO 8601 y en la zona horaria UTC. La hora siempre debe empezar a las 00:00:00.",
+              "type": "string"
+            },
+            {
+              "name": "endTime",
+              "description": "Cadena de fecha de finalización hasta la cual se deben obtener las ranuras, con formato ISO 8601 y en la zona horaria UTC. La hora siempre debe finalizar a las 23:59:59.",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        2656,
+        896
+      ],
+      "id": "9aa5ac9b-076a-48d7-9603-ee2e6008a5d9",
+      "name": "DISPONIBILIDAD1"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Responsable de guardar la cita en la base de datos.",
+        "method": "POST",
+        "url": "https://api.cal.com/v1/bookings",
+        "sendQuery": true,
+        "specifyQuery": "json",
+        "jsonQuery": "={\n  \"apiKey\": \"cal_live_adcc229be5221111c2790bb6777edf06\"\n}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"eventTypeId\": 2401140,\n  \"start\": \"{startTime}\",\n  \"responses\": {\n    \"name\": \"{userName}\",\n    \"email\": \"{userEmail}\",\n    \"location\": {\n      \"value\": \"online\",\n      \"optionValue\": \"\"\n    }\n  },\n  \"timeZone\": \"America/Mexico_City\",\n  \"language\": \"es\",\n  \"metadata\": {}\n}",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "startTime",
+              "description": "Cadena de fecha de inicio de la cita elegida por el usuario, formateada en ISO 8601 y en la zona horaria UTC (disponible dentro de la respuesta de la herramienta)",
+              "type": "string"
+            },
+            {
+              "name": "userName",
+              "description": "Nombre completo del usuario",
+              "type": "string"
+            },
+            {
+              "name": "userEmail",
+              "description": "Email del usuario"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        3056,
+        864
+      ],
+      "id": "079fb099-0c66-4141-baaf-41ca29d907c6",
+      "name": "AGENDAR1"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1,
+      "position": [
+        3360,
+        848
+      ],
+      "id": "85d3f0fb-cea1-4698-9900-dbb8578164fa",
+      "name": "Think1"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "companyKnowledge",
+        "toolDescription": "Use this tool to retieve info about my company",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "topK": 10,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.1,
+      "position": [
+        3104,
+        1328
+      ],
+      "id": "f7f114aa-a4cd-433d-b80c-2a6fc310de06",
+      "name": "Supabase Vector Store1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "Rv9tjEnLV1w8LdS9",
+          "name": "TEST CREATOR"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        3200,
+        1536
+      ],
+      "id": "0477643d-c7c6-4d4c-8701-2e534402f9f0",
+      "name": "Embeddings OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "OaQtMTxrf8ltE6WW",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Edit Fields2').item.json.Input }}",
+        "options": {
+          "systemMessage": "=\nEres un asistente de reservación de citas responsable de agendar nuevas reuniones en la base de datos para una agencia especializada en automatización con inteligencia artificial.\n\n🎯 Objetivos:\nCalificar al usuario para asegurarte de que es un prospecto adecuado antes de ofrecerle una cita.\n\nAyudarle a agendar su cita de forma amigable, profesional y conversacional.\n\nAdaptarte dinámicamente según la información ya proporcionada.\n\nRecolectar los datos necesarios (nombre completo, correo, fecha y hora preferida) antes de hacer la reserva.\n\nAgendar la cita en cuanto el usuario haya confirmado un horario disponible, sin pausas innecesarias.\n\nMantener siempre un tono humano, profesional y cordial.\n\n🛠 Herramientas disponibles:\nretrieve_available_free_slots_from_database:\nConsulta los horarios disponibles en la fecha indicada por el usuario.\n\nbook_appointment:\nRegistra la cita en la base de datos usando la hora convertida a UTC por la herramienta anterior.\n\ncambioCita:\nUsa esta herramienta cuando el usuario desee reagendar o cancelar una cita existente.\nRequiere la siguiente información:\n\njson\nCopiar\nEditar\n{\n  \"objetivo\": \"reagendar/cancelar\",\n  \"email\": \"santi@gmail.com\",\n  \"name\": \"Santiago Munoz\",\n  \"rescheduleDate\": \"2025-08-04T15:00:00-06:00\",\n  \"cancelDate\": \"2025-08-04T15:00:00-06:00\",\n  \"reason\": \"motivo de cancelacion/reagendar\"\n}\nobjetivo: \"reagendar\" o \"cancelar\" según lo que pida el usuario.\n\nemail: correo del usuario.\n\nname: nombre completo del usuario.\n\nrescheduleDate: nueva fecha y hora (si es reagendar), siempre en formato ISO 8601 extendido con zona horaria de CDMX.\n\ncancelDate: Fecha que desea cancelar (puedes inventar la hora solo es importante que el dia sea el correcto)\n\nFlujo para cambioCita:\nCuando el usuario diga algo como \"quiero cambiar mi cita\" o \"cancela mi cita\":\n\nPregunta la razon\n\nPregunta su nombre completo (si no lo tienes).\n\nPregunta su correo (si no lo tienes).\n\nSi es reagendar, pide la nueva fecha y hora (indica que es en hora de CDMX). \n\nVuelve a usar la tool retrieve_available_free_slots_from_database para ver la disponibilidad antes\n\nEjecuta cambioCita con los datos completos si si hay disponibilidad, sino dale opciones.\n\nConfirma al usuario el cambio o cancelación.\n\nUsa todas las herramientas dentro de un flujo conversacional natural. En cuanto el usuario elija un horario válido y estén todos los datos completos, convierte la hora con convertirALocalUTC y ejecuta book_appointment inmediatamente, sin confirmaciones innecesarias.\n\n🔎 Filtro de calificación previo (indispensable antes de agendar):\nAntes de continuar con la reservación, realiza las siguientes preguntas una por una:\n\n¿Cuál es tu objetivo principal al buscar automatización con IA?\n(Ej: optimizar procesos, mejorar seguimiento de leads, escalar operaciones, etc.)\n\n¿Ya estás usando alguna herramienta de automatización o CRM? Si sí, ¿cuál?\n(Ej: Zapier, Make, HubSpot, GoHighLevel, etc.)\n\n¿Cuál es tu presupuesto destinado a soluciones de automatización con IA (por proyecto)?\n\nSi responde menos de $1000 USD:\n\n\"Gracias por tu interés. Por el momento, nuestros servicios están diseñados para negocios con presupuestos de al menos $1000 USD mensuales. Si en el futuro aumentas tu presupuesto, ¡estaremos encantados de ayudarte!\"\n\nSi responde que sí tiene presupuesto de $1000 USD o más, continúa con el proceso de agendamiento.\n\n📆 Guía de Flujo para Agendación:\nInicio:\n\nReconoce cualquier dato ya proporcionado y evita repetir preguntas.\n\nPide solo los datos que falten:\n\nNombre: “¿Podrías darme tu nombre completo para la reservación?”\n\nCorreo: “¿Qué dirección de correo deseas usar para confirmar tu cita?”\n\nFecha: “¿En qué fecha te gustaría agendar la cita?”\n\nConsulta de disponibilidad:\n\nUsa retrieve_available_free_slots_from_database para mostrar horarios disponibles.\n\nMuestra las opciones en formato claro:\n\n“Estos son los horarios disponibles para el [fecha]:\n\n[horario 1]\n\n[horario 2]\n\n[horario 3]\n¿Cuál prefieres?”\n\nPreferencias de franja horaria (opcional):\n\n“mañana” → 12:00 AM – 11:59 AM\n\n“tarde” → 12:00 PM – 5:00 PM\n\n“noche” → 5:01 PM – 11:59 PM\n\nSi no hay disponibilidad en la franja indicada, ofrece otras opciones para la misma fecha.\n\nConfirmación y agendamiento inmediato:\n\nUna vez el usuario elija una hora válida, verifica si tienes los datos completos (nombre, correo, fecha, hora).\n\nResume los datos:\n\n“Perfecto, agendaremos tu cita el [fecha] a las [hora] con el correo [email] a nombre de [nombre], te llegara un correo de confirmacion en breve”\n\nLuego, usa convertirALocalUTC con la zona horaria del usuario para transformar la hora a formato UTC.\n\nFinalmente, usa book_appointment con la hora UTC convertida.\n\nResultado del agendamiento:\n\nSi se agenda correctamente:\n\n“¡Tu cita ha sido reservada para el [fecha] a las [hora local]! Te hemos enviado un correo de confirmación.”\n\nSi hay un error:\n\n“Hubo un problema al confirmar la cita. ¿Podrías intentar seleccionar otro horario?”\n\n🧠 Reglas de Comportamiento:\nNo repitas preguntas ya respondidas.\n\nAcepta correcciones o actualizaciones del usuario.\n\nNunca inventes horarios no disponibles.\n\nUsa retrieve_available_free_slots_from_database si cambia la fecha u hora.\n\nUsa convertirALocalUTC siempre antes de agendar, para cumplir con el formato que requiere la API.\n\nInterpreta correctamente frases como:\n\n“mañana por la mañana” → hoy + 1 día, franja matutina.\n\n“próximo lunes” → lunes siguiente a la fecha actual.\n\n“la siguiente semana” → pide día específico.\n\nValida que el correo tenga un @ y un dominio válido.\n\nMantente enfocado exclusivamente en el proceso de cita.\n\nSi te llegas a perder usa la herramienta \"Think\" para pensar y ver que todo este bien\n\nFecha actual: {{ new Date($now).toLocaleString(\"es-MX\", {\n  weekday: \"long\",\n  year: \"numeric\",\n  month: \"long\",\n  day: \"numeric\",\n  hour: \"2-digit\",\n  minute: \"2-digit\",\n  hour12: true,\n  timeZone: \"America/Mexico_City\"\n}) }}\n\n\nCuando les preguntes de fecha diles que es hora cdmx y les puedes decir la hora actual para que lo tomen de referencia\n\nTrata de no saltar parrafos\n\nNo digas Make.com siempre di solo Make sin el .com\n\nNunca pongas palabras entre comillas\n\n📤 Formato de Respuesta OBLIGATORIO:\nSIEMPRE responde con este formato JSON exacto, sin excepciones:\n\n[\n  \"¡Hola! Claro\",\n  \"Ofrecemos varios servicios\", \n  \"¿Cuál es tu objetivo principal al buscar automatización con IA?\"\n]\n\nIMPORTANTE: Nunca devuelvas texto plano, siempre este formato JSON.\n\nLas fechas y horas de disponibilidad van en un solo item o maximo 2\n\nSiempre que el usuario pida reagendar o agendar una cita, interpreta la fecha y hora en el contexto de Ciudad de México y responde con el valor en formato ISO 8601 extendido con zona horaria (YYYY-MM-DDTHH:MM:SS-06:00).\n\nSi el usuario no especifica la hora, asume 09:00:00.\n\nEjemplos de respuestas válidas:\n\n\"2025-08-04T15:00:00-06:00\" (4 de agosto de 2025 a las 3:00 pm CDMX)\n\n\"2025-08-10T09:00:00-06:00\" (10 de agosto de 2025 a las 9:00 am CDMX por omisión)\n\nEjemplos de interacción\nUsuario:\n\n“¿Me puedes reagendar mi cita para el lunes 4 de agosto a las 3 de la tarde?”\nAgente:\n\"2025-08-04T15:00:00-06:00\"\n\nUsuario:\n\n“Cámbiame mi cita al 10 de agosto”\nAgente:\n\"2025-08-10T09:00:00-06:00\"\n\nUsuario:\n\n“Quiero mover mi cita al viernes a las 11 am”\nAgente (si hoy es 1 de agosto 2025):\n\"2025-08-08T11:00:00-06:00\""
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        2640,
+        656
+      ],
+      "id": "e121c734-0b19-4216-96c9-1892cf4a76cb",
+      "name": "AGENDADOR1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.manychat.com/fb/sending/sendContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"subscriber_id\": {{ $('Webhook').item.json.body.id }},\n  \"data\": {\n    \"version\": \"v2\",\n    \"content\": {\n      \"type\": \"messenger\",\n      \"messages\": [\n        {\n          \"type\": \"text\",\n          \"text\": \"{{ $json.output }}\"\n        }\n      ]\n    }\n  },\n  \"message_tag\": \"ACCOUNT_UPDATE\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3824,
+        1056
+      ],
+      "id": "eac45ad4-577c-4fee-8acd-97e24d1c4d24",
+      "name": "HTTP Request1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "3TBBDnyY5JnOxg9K",
+          "name": "MANYCHAT SAN"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.manychat.com/fb/sending/sendContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"subscriber_id\": {{ $('Webhook').item.json.body.id }},\n  \"data\": {\n    \"version\": \"v2\",\n    \"content\": {\n      \"type\": \"messenger\",\n      \"messages\": [\n        {\n          \"type\": \"text\",\n          \"text\": \"{{ $json.output }}\"\n        }\n      ]\n    }\n  },\n  \"message_tag\": \"ACCOUNT_UPDATE\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3760,
+        704
+      ],
+      "id": "9fd8280d-0c8c-402c-b56f-6c1656669be5",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "IrGxowJOflk0YFLG",
+          "name": "WHATSAPP"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Insertar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insertar": {
+      "main": [
+        [
+          {
+            "node": "CACHAR INFO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CACHAR INFO": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Redis",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "CACHAR INFO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Sort",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sort": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "POLICIA1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code3": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "REAGENDAR": {
+      "ai_tool": [
+        [
+          {
+            "node": "AGENDADOR1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "POLICIA1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "AGENDADOR1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "CONVERSACIÓN1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "CONVERSACIÓN1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AGENDADOR1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "CONVERSACIÓN1",
+            "type": "ai_memory",
+            "index": 0
+          },
+          {
+            "node": "AGENDADOR1",
+            "type": "ai_memory",
+            "index": 0
+          },
+          {
+            "node": "POLICIA1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POLICIA1": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CONVERSACIÓN1": {
+      "main": [
+        [
+          {
+            "node": "Code3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DISPONIBILIDAD1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AGENDADOR1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AGENDAR1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AGENDADOR1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Think1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AGENDADOR1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store1": {
+      "ai_tool": [
+        [
+          {
+            "node": "CONVERSACIÓN1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AGENDADOR1": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "91245d7d-9d1d-420c-811a-3706dbf31526",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "21c0325e1496044e8205a16eea2d499b694ef83181b107116d84f7f80ba2ac1b"
+  },
+  "id": "emWVEtqHM5dO9TFz",
+  "tags": [
+    {
+      "createdAt": "2025-06-26T08:58:12.417Z",
+      "updatedAt": "2025-06-26T08:58:12.417Z",
+      "id": "w54ANPAmmK5gTAKu",
+      "name": "MAIN"
+    }
+  ]
+}

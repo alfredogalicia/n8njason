@@ -1,0 +1,67 @@
+{
+  "name": "ERROR",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "48fd77be-138c-4681-8770-e8eae28132f9",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "chatId": "1420703619",
+        "text": "=Ha habido un error en un flujo de Deyac\nFlujo: {{ $('Error Trigger').item.json.workflow.name }}\nNodo: {{ $('Error Trigger').item.json.execution.lastNodeExecuted }}\nMensaje de error: {{ $('Error Trigger').item.json.execution.error.message }}\nId de ejecución: {{ $('Error Trigger').item.json.execution.id }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        256,
+        0
+      ],
+      "id": "63551079-7251-40ea-af71-716ce896c312",
+      "name": "Send a text message",
+      "webhookId": "a4acea19-a2bf-4bdd-ad5c-136235d52c45",
+      "credentials": {
+        "telegramApi": {
+          "id": "5Vtb7TIXz189DT8d",
+          "name": "Notificador"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "b82bab55-3f35-44e7-a8f7-42db14c6df99",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c78129193179b2d598b2c2ea12a47fc6bc5ce3ffadc4264a297a1d77efff305d"
+  },
+  "id": "rNABQ6Eh3BzM4YbW",
+  "tags": []
+}

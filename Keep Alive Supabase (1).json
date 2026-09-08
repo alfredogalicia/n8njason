@@ -1,0 +1,232 @@
+{
+  "name": "Keep Alive Supabase",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "daysInterval": 2,
+              "triggerAtHour": 7
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        928,
+        256
+      ],
+      "id": "6f59f2f8-403f-4228-ab60-9cdd56ad0e95",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "content": "## 🧾 Agregar proyecto\n\n🪜 Paso a paso:\n* Ingresá a Supabase → https://supabase.com\n* Seleccioná el proyecto que querés agregar.\n* Obtené los datos necesarios:\n📍 url:\nIr a Settings → API\nCopiar el campo URL (ej: https://mi_proyecto.supabase.co)\n🔑 key (Service Role):\nEn la misma página, buscá Service Role key\nCopiala ",
+        "height": 320,
+        "width": 704,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        368
+      ],
+      "typeVersion": 1,
+      "id": "f9eb074b-012f-4df7-835d-fa49a7c3912c",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## 🛠 SQL necesario\n\n⚠️ Ejecutar una sola vez por proyecto (en SQL editor de Supabase)\n\n```sql\n-- Crear tabla minimalista de keepalive\nCREATE TABLE IF NOT EXISTS public.keepalive (\n  key        text PRIMARY KEY,\n  touched_at timestamptz NOT NULL DEFAULT now()\n);\n\n-- Insertar la fila única de referencia\nINSERT INTO public.keepalive (key)\nVALUES ('keepalive')\nON CONFLICT (key) DO NOTHING;\n\n",
+        "height": 352,
+        "width": 704,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        -16
+      ],
+      "typeVersion": 1,
+      "id": "e29edf46-1be9-400f-8153-098c2b1a59bc",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Flujos Supabase\n- Mercado Gama\n- Importaciones Cantabria\n- Negro Mostaza"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        768,
+        464
+      ],
+      "typeVersion": 1,
+      "id": "78a1672e-fc99-418b-9f07-cb8ddb84c59b",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "keepalive",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "key",
+              "condition": "eq",
+              "keyValue": "keepalive"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "touched_at",
+              "fieldValue": "={{ $now.setZone('America/Mexico_City').toISO() }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1152,
+        64
+      ],
+      "id": "f99449c4-b2e2-4900-a733-0d0edb25630d",
+      "name": "Mercado Gama",
+      "credentials": {
+        "supabaseApi": {
+          "id": "1CVYsAtQWOuJeD03",
+          "name": "Mercado gama"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "keepalive",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "key",
+              "condition": "eq",
+              "keyValue": "keepalive"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "touched_at",
+              "fieldValue": "={{ $now.setZone('America/Mexico_City').toISO() }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1152,
+        256
+      ],
+      "id": "c819ef88-00d5-453c-be1c-efbb1d54ede2",
+      "name": "Negro Mostaza",
+      "credentials": {
+        "supabaseApi": {
+          "id": "1CVYsAtQWOuJeD03",
+          "name": "Mercado gama"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "keepalive",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "key",
+              "condition": "eq",
+              "keyValue": "keepalive"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "touched_at",
+              "fieldValue": "={{ $now.setZone('America/Montevideo').toISO() }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1152,
+        448
+      ],
+      "id": "5dc34099-0fb5-44a9-92af-7b46e96715e2",
+      "name": "Importaciones Cantabria",
+      "credentials": {
+        "supabaseApi": {
+          "id": "3ejHXr6qoHsS8uyx",
+          "name": "Cantabria"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Mercado Gama",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Negro Mostaza",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Importaciones Cantabria",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mercado Gama": {
+      "main": [
+        []
+      ]
+    },
+    "Negro Mostaza": {
+      "main": [
+        []
+      ]
+    },
+    "Importaciones Cantabria": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "ed0eae8f-fd2d-4bd6-89c6-770f79a08f90",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b02583ad85f066bb50487c892a20661bf3f0dc3b20e5c2c7f400d46357f7344b"
+  },
+  "id": "cOYaHlre474RUwY0lSyvH",
+  "tags": []
+}

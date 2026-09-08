@@ -1,0 +1,684 @@
+{
+  "name": "My workflow 10",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "video youtube",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "URL"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -20,
+        -400
+      ],
+      "id": "701a0828-cf40-4d1c-b576-705816a98bac",
+      "name": "On form submission",
+      "webhookId": "472af5ae-9ed5-49e5-9c75-de8a79b0ed2c"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.supadata.ai/v1/youtube/transcript?url={{ $json.URL }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        -400
+      ],
+      "id": "d923ac15-2299-4d51-bd7e-fa456fa3fa32",
+      "name": "TRANSCRIBIRDOR",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "S9HzB2s3sbJ3ydmd",
+          "name": "supadata"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.content }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "={\n  \"titulo\": \"\", // Título principal del blog\n  \"descripcion\": \"\", // Descripción corta del contenido\n  \"secciones\": [\n    {\n      \"seccion\": \"seccion-1\",\n      \"titulo\": \"\", // Título de la sección\n      \"puntosClave\": [], // Lista de puntos importantes a cubrir\n      \"tipo\": \"\" // tipo de contenido: explicación, tutorial, ejemplo, etc.\n    }\n  ],\n  \"palabrasClave\": [], // Keywords principales para SEO\n  \"nivelContenido\": \"\" // principiante, intermedio, avanzado\n}\n\nPROMPT PARA EL AGENTE:\n\nEres un experto en creación de contenido y estructura de blogs. Tu tarea es analizar la transcripción de un video de YouTube y crear un esquema lógico y bien estructurado para un artículo de blog.\n\nCONTEXTO:\n- La transcripción proviene de un video de YouTube\n- Necesitamos convertir el contenido en un formato escrito efectivo\n- La estructura debe ser fácil de seguir y tener un flujo lógico\n\nINSTRUCCIONES:\n\n1. Analiza cuidadosamente la transcripción completa del video\n\n2. Identifica:\n   - El tema principal\n   - Los subtemas o puntos clave\n   - La complejidad del contenido\n   - El público objetivo\n\n3. Crea un esquema que:\n   - Divida el contenido en secciones lógicas\n   - Mantenga un flujo natural de información\n   - Incluya todos los puntos importantes del video\n   - Adapte el contenido al formato de blog\n\n4. Para cada sección, determina:\n   - Un título claro y descriptivo\n   - Los puntos clave a cubrir\n   - El tipo de contenido (explicación, tutorial, ejemplo, etc.)\n\n5. Genera un JSON siguiendo el esquema proporcionado que:\n   - Sea claro y bien estructurado\n   - Tenga el número apropiado de secciones según el contenido\n   - Incluya todos los elementos necesarios para crear un blog completo\n\nREGLAS:\n- No te limites a un número específico de secciones\n- Asegúrate de que cada sección tenga un propósito claro\n- Mantén un balance entre profundidad y claridad\n- Adapta el nivel de detalle al público objetivo\n- Asegúrate de que el contenido fluya lógicamente de una sección a otra\n\nOUTPUT:\nDebes entregar el JSON completo siguiendo exactamente el esquema proporcionado, asegurándote de que:\n1. Todas las secciones están correctamente numeradas\n2. Los títulos son claros y descriptivos\n3. Los puntosClave son específicos y relevantes\n4. El formato JSON es válido y sigue la estructura exacta del esquema\n\nEJEMPLO DE USO:\nSi el video es sobre \"Cómo hacer pan casero\", podrías generar algo como:\n\n{\n  \"titulo\": \"Guía Completa: Cómo Hacer Pan Casero desde Cero\",\n  \"descripcion\": \"Aprende el paso a paso para hacer pan casero, desde los ingredientes básicos hasta las técnicas de horneado\",\n  \"secciones\": [\n    {\n      \"seccion\": \"seccion-1\",\n      \"titulo\": \"Ingredientes y Herramientas Necesarias\",\n      \"puntosClave\": [\n        \"Lista de ingredientes básicos\",\n        \"Herramientas indispensables\",\n        \"Sustitutos posibles\"\n      ],\n      \"tipo\": \"preparacion\"\n    },\n    {\n      \"seccion\": \"seccion-2\",\n      \"titulo\": \"Proceso de Amasado\",\n      \"puntosClave\": [\n        \"Técnica correcta de amasado\",\n        \"Tiempo recomendado\",\n        \"Señales de masa lista\"\n      ],\n      \"tipo\": \"tutorial\"\n    }\n  ],\n  \"palabrasClave\": [\"pan casero\", \"panadería\", \"recetas\", \"horneado\"],\n  \"nivelContenido\": \"principiante\"\n}\n\n\nNOTA\n\nNUNCA EMPIECES CON ```json"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        480,
+        -400
+      ],
+      "id": "8111732b-fa95-4902-a521-55ac65eda358",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": "anthropic/claude-3.5-sonnet",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        440,
+        -200
+      ],
+      "id": "c1fa3d1d-ecac-4b25-8e4d-8c70b4f52215",
+      "name": "OpenRouter Chat Model1",
+      "credentials": {
+        "openRouterApi": {
+          "id": "FEd5JoILGfJiQ3Rf",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst updatedItems = items.map((item) => {\n  try {\n    const jsonString = item?.json?.text\n      .replace(\"```json\\n\", \"\")\n      .replace(\"\\n```\", \"\");\n    const jsonObject = JSON.parse(jsonString);\n    item.json = jsonObject;\n  } catch (error) {\n    console.log(`Error parsing JSON for item: ${item?.json?.text}`);\n  }\n  return item;\n});\nreturn updatedItems;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        840,
+        -400
+      ],
+      "id": "3e066b69-1554-46af-867f-902ccbc625e5",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "secciones",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1080,
+        -400
+      ],
+      "id": "28c93c3c-82d3-4ef2-a4e9-9153c480ef60",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Numero de secciones: {{ $json.seccion }}\nTitulo {{ $json.titulo }}\nPuntos Clave \n1. {{ $json.puntosClave[0] }}\n2. {{ $json.puntosClave[1] }}\n3. {{ $json.puntosClave[2] }}\n4. {{ $json.puntosClave[3] }}\n\nTipo: {{ $json.tipo }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=PROMPT PARA GENERACIÓN DE SECCIÓN DE BLOG EN HTML\n\nCONTEXTO:\nEres un experto escritor de blogs que genera contenido en HTML limpio y semántico. Tu tarea es escribir UNA SECCIÓN específica de un blog que será compatible con Google Docs.\n\nINPUT DISPONIBLE:\n- Título de la sección\n- Puntos clave a cubrir\n- Número de sección\n- Tipo de contenido (explicación, tutorial, ejemplo, etc.)\n\nINSTRUCCIONES:\n1. Genera contenido HTML que:\n   - Use etiquetas semánticas (h2, h3, p, etc.)\n   - Sea limpio y bien estructurado\n   - Incluya clases para estilos básicos\n   - Sea compatible con Google Docs\n\n2. Estructura HTML requerida:\n   - Usa <article> para la sección completa\n   - <h2> para títulos de sección\n   - <h3> para subtítulos si son necesarios\n   - <p> para párrafos\n   - <ul> y <li> para listas si son necesarias\n\n3. Reglas de formato:\n   - Indentación consistente\n   - Párrafos separados adecuadamente\n   - Espaciado limpio entre elementos\n   - Sin estilos inline\n\nFORMATO DE SALIDA:\nEntrega SOLO el HTML de la sección, sin head ni body.\n\nEJEMPLO:\n\nInput:\nTítulo: \"Beneficios del Ejercicio Matutino\"\nPuntos clave: \n- Aumento de energía\n- Mejora del metabolismo\n- Mejor sueño\n\nOutput:\n<article class=\"blog-section\">\n    <h2 class=\"section-title\">Beneficios del Ejercicio Matutino</h2>\n    \n    <p class=\"section-intro\">\n        El ejercicio matutino ofrece beneficios transformadores para tu rutina diaria. Cuando comenzamos el día con actividad física, desencadenamos una serie de efectos positivos que perduran durante horas.\n    </p>\n    \n    <h3 class=\"subsection-title\">Aumento de Energía</h3>\n    <p class=\"section-content\">\n        El primer beneficio notable es el incremento inmediato en los niveles de energía. El ejercicio estimula la producción de endorfinas y aumenta el flujo sanguíneo, lo que nos mantiene alertas y enfocados durante la mañana y la tarde.\n    </p>\n    \n    <h3 class=\"subsection-title\">Mejora del Metabolismo</h3>\n    <p class=\"section-content\">\n        Nuestro metabolismo recibe un impulso significativo. Al ejercitarnos en ayunas, el cuerpo se vuelve más eficiente en la quema de grasas y mantiene un ritmo metabólico elevado durante varias horas después de la actividad física.\n    </p>\n    \n    <h3 class=\"subsection-title\">Calidad del Sueño</h3>\n    <p class=\"section-content\">\n        La calidad del sueño mejora notablemente cuando hacemos ejercicio por la mañana. A diferencia del ejercicio nocturno, la actividad matutina ayuda a regular nuestro ritmo circadiano, facilitando un sueño más profundo y reparador.\n    </p>\n</article>"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        1280,
+        -400
+      ],
+      "id": "a9f11325-d7c3-4178-babd-7ff45edd68fb",
+      "name": "Basic LLM Chain1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.2,
+      "position": [
+        1100,
+        -160
+      ],
+      "id": "30682f80-a7be-467f-8566-2d5e46cd4d49",
+      "name": "Anthropic Chat Model",
+      "credentials": {
+        "anthropicApi": {
+          "id": "H4BTYxrD3r6EELwv",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "text"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -20,
+        -120
+      ],
+      "id": "ddf84eaf-a54f-45be-b668-a61b7acbc16b",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.replicate.com/v1/models/black-forest-labs/flux-1.1-pro-ultra/predictions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "wait"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"input\": {\n    \"prompt\": \"{{ $json.instruccion }}\",\n    \"aspect_ratio\": \"3:2\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1480,
+        -120
+      ],
+      "id": "2022905b-a9b2-4f6d-82e8-3d42d206698c",
+      "name": "HTTP Request1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "dss5SYflBYDqZP52",
+          "name": "REPLICATE IMAGEN"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=PROMPT PARA AGENTE GENERADOR DE INSTRUCCIONES DE IMÁGENES\n\nCONTEXTO:\nEres un experto en crear prompts para modelos de generación de imágenes. Tu tarea es generar instrucciones precisas para crear dos imágenes relevantes para una sección de blog.\n\nINPUT:\n- Título de la sección\n- Puntos clave del contenido\n- Tipo de contenido (tutorial, explicación, etc.)\n\nINSTRUCCIONES:\n\n1. Genera dos prompts diferentes:\n   - Una imagen principal conceptual/abstracta\n   - Una imagen secundaria más específica/práctica\n\n2. Para cada prompt asegúrate de:\n   - Ser específico en el estilo visual\n   - Incluir detalles de composición\n   - Especificar el tono y ambiente\n   - Incluir elementos técnicos relevantes\n\nREGLAS:\n- NO generes imágenes de personas identificables\n- NO incluyas marcas registradas o logos\n- Mantén un estilo profesional y moderno\n- Prioriza claridad sobre complejidad\n\nFORMATO DE SALIDA:\n{\n    \"imagenes\": [\n        {\n            \"tipo\": \"principal\",\n            \"instruccion\": \"prompt detallado para la imagen\",\n            \"estilo\": \"estilo visual específico\",\n            \"aspectos_clave\": [\"elemento1\", \"elemento2\", \"elemento3\"]\n        },\n        {\n            \"tipo\": \"secundaria\",\n            \"instruccion\": \"prompt detallado para la imagen\",\n            \"estilo\": \"estilo visual específico\",\n            \"aspectos_clave\": [\"elemento1\", \"elemento2\", \"elemento3\"]\n        }\n    ]\n}\n\nEJEMPLO DE USO:\n\nInput:\n{\n    \"titulo\": \"Optimización de Código en Python\",\n    \"puntosClave\": [\n        \"Técnicas de refactorización\",\n        \"Mejora de rendimiento\",\n        \"Buenas prácticas\"\n    ],\n    \"tipo\": \"tutorial\"\n}\n\nOutput:\n{\n    \"imagenes\": [\n        {\n            \"tipo\": \"principal\",\n            \"instruccion\": \"Una visualización abstracta de optimización de código, mostrando bloques de código transformándose de rojo a verde, con líneas de conexión minimalistas, sobre un fondo oscuro. Estilo digital limpio con elementos geométricos que sugieren mejora y eficiencia. Paleta de colores tech: azul profundo, verde neón, y detalles en blanco.\",\n            \"estilo\": \"digital minimalista, tech, abstracto\",\n            \"aspectos_clave\": [\n                \"transformación visual\",\n                \"concepto de optimización\",\n                \"elementos de código\"\n            ]\n        },\n        {\n            \"tipo\": \"secundaria\",\n            \"instruccion\": \"Una representación visual de métricas de rendimiento, mostrando gráficos de barras 3D con gradientes de azul a verde, indicando mejora de velocidad. Incluye símbolos de Python sutiles y elementos de UI modernos. Fondo claro con grid sutil y sombras suaves.\",\n            \"estilo\": \"infográfico moderno, técnico, datos\",\n            \"aspectos_clave\": [\n                \"visualización de datos\",\n                \"mejora de rendimiento\",\n                \"elementos técnicos\"\n            ]\n        }\n    ]\n}\n\nCONSIDERACIONES ADICIONALES:\n1. Asegúrate de que las imágenes se complementen entre sí\n2. La imagen principal debe ser más conceptual y atractiva visualmente\n3. La imagen secundaria debe reforzar aspectos específicos del contenido\n4. Ambas imágenes deben mantener coherencia en estilo y tono\n5. Considera el contexto técnico del tema para la elección de elementos visuales",
+              "role": "system"
+            },
+            {
+              "content": "=Seccion para imagen\n1.{{ $('Aggregate').item.json.text[0] }}\n\n2. {{ $('Aggregate').item.json.text[2] }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        720,
+        -120
+      ],
+      "id": "8317c6e6-698c-48ae-b311-186e63b42a93",
+      "name": "OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "YjvWNPb8M83OV0I5",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "message.content.imagenes",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        -120
+      ],
+      "id": "636a884d-eb44-4624-91b5-32c2f830df95",
+      "name": "Split Out1"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "output"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        120
+      ],
+      "id": "c29bbf6c-65d5-4bc7-9626-eead162adc9c",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "folderId": "default",
+        "title": "=Blog"
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        700,
+        120
+      ],
+      "id": "ca72d1ac-e9de-477b-a779-e831edfef3b8",
+      "name": "Google Docs",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "RQTeKwYDHISadd1r",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ $json.id }}",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "insert",
+              "text": "={{ $('Basic LLM Chain2').item.json.text }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        1060,
+        120
+      ],
+      "id": "9c6c0631-e25c-435d-b316-100973dec728",
+      "name": "Google Docs1",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "RQTeKwYDHISadd1r",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Código para n8n\nfunction combinarSecciones(items) {\n    // Estilos base\n    const estilos = `\n        <style>\n            body {\n                font-family: Arial, sans-serif;\n                line-height: 1.6;\n                color: #333;\n                max-width: 800px;\n                margin: 0 auto;\n                padding: 20px;\n            }\n            .blog-section {\n                margin-bottom: 3em;\n                padding: 20px;\n            }\n            .section-title {\n                font-size: 2em;\n                color: #2c3e50;\n                margin-bottom: 1em;\n                font-weight: 700;\n            }\n            .subsection-title {\n                font-size: 1.5em;\n                color: #34495e;\n                margin: 1.5em 0 1em;\n                font-weight: 600;\n            }\n            .section-intro {\n                font-size: 1.1em;\n                color: #2c3e50;\n                line-height: 1.8;\n                margin-bottom: 1.5em;\n            }\n            .section-content {\n                margin-bottom: 1.5em;\n                line-height: 1.8;\n            }\n            .section-conclusion {\n                font-style: italic;\n                color: #2c3e50;\n                margin-top: 2em;\n                padding-top: 1em;\n                border-top: 1px solid #eee;\n            }\n        </style>\n    `;\n\n    // Procesar los items\n    const secciones = items[0].json.text;\n\n    // Construir el HTML\n    const htmlCompleto = `\n        <!DOCTYPE html>\n        <html lang=\"es\">\n        <head>\n            <meta charset=\"UTF-8\">\n            <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n            <title>Blog Post</title>\n            ${estilos}\n        </head>\n        <body>\n            <main class=\"blog-content\">\n                ${secciones.join('\\n')}\n            </main>\n        </body>\n        </html>\n    `;\n\n    // Retornar en el formato que espera n8n\n    return [{\n        json: {\n            html: htmlCompleto\n        }\n    }];\n}\n\n// Retornar la función para n8n\nreturn combinarSecciones(items);"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        -120
+      ],
+      "id": "9546b6a3-2867-40ec-8f73-5846234e12b6",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "jsCode": "function formatForGoogleDocs(items) {\n    try {\n        const contenidoOriginal = items[0].json.html || items[0].html || '';\n        \n        // Extraer el contenido del body usando regex\n        const bodyContent = contenidoOriginal.match(/<main[^>]*>([\\s\\S]*?)<\\/main>/i)?.[1] || contenidoOriginal;\n        \n        // Limpieza y simplificación del HTML\n        let contenidoLimpio = bodyContent\n            // Eliminar clases CSS\n            .replace(/\\sclass=\"[^\"]*\"/g, '')\n            // Convertir article en div\n            .replace(/<\\/?article[^>]*>/g, '')\n            // Limpiar espacios y líneas extra\n            .replace(/\\n\\s+\\n/g, '\\n')\n            .replace(/\\n{3,}/g, '\\n\\n')\n            .trim();\n\n        // Aplicar estilos básicos compatibles con Google Docs\n        contenidoLimpio = contenidoLimpio\n            // Formatear títulos\n            .replace(/<h2[^>]*>(.*?)<\\/h2>/g, '<h2 style=\"font-size: 24px; color: #333; margin: 20px 0; border-bottom: 1px solid #eee; padding-bottom: 10px;\">$1</h2>')\n            // Formatear subtítulos\n            .replace(/<h3[^>]*>(.*?)<\\/h3>/g, '<h3 style=\"font-size: 20px; color: #444; margin: 15px 0;\">$1</h3>')\n            // Formatear párrafos\n            .replace(/<p[^>]*>(.*?)<\\/p>/g, '<p style=\"font-size: 14px; line-height: 1.6; margin: 10px 0; color: #333;\">$1</p>');\n\n        // Estructura final del documento\n        const documentoFinal = `\n<div style=\"font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;\">\n    ${contenidoLimpio}\n</div>`;\n\n        return [{\n            json: {\n                html: documentoFinal\n            }\n        }];\n    } catch (error) {\n        console.error('Error al procesar el documento:', error);\n        return [{\n            json: {\n                html: '<p>Error al procesar el contenido</p>'\n            }\n        }];\n    }\n}\n\n// Retornar la función para n8n\nreturn formatForGoogleDocs(items);"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        -120
+      ],
+      "id": "27380327-1fe6-4e8b-ae1d-3e98b9b474fb",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "siteId": "6791f3efea5f0917214df03c",
+        "collectionId": "6791f3efea5f0917214df0b4",
+        "live": true,
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "post-body",
+              "fieldValue": "={{ $('Basic LLM Chain2').item.json.text }}"
+            },
+            {
+              "fieldId": "main-image",
+              "fieldValue": "={{ $('Aggregate1').item.json.output[0] }}"
+            },
+            {
+              "fieldId": "name",
+              "fieldValue": "={{ $('Code').item.json.titulo }}"
+            },
+            {
+              "fieldId": "slug",
+              "fieldValue": "=blog33"
+            },
+            {
+              "fieldId": "thumbnail-image",
+              "fieldValue": "={{ $('Aggregate1').item.json.output[1] }}"
+            },
+            {
+              "fieldId": "post-summary",
+              "fieldValue": "={{ $('Code').item.json.descripcion }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.webflow",
+      "typeVersion": 2,
+      "position": [
+        1480,
+        120
+      ],
+      "id": "cf9b07da-8292-4d7e-9cae-2c4721bb0fa8",
+      "name": "Webflow",
+      "credentials": {
+        "webflowOAuth2Api": {
+          "id": "6Eke7dA2SWGAoPMP",
+          "name": "conexion 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=1. secciones: {{ $('Code2').item.json.html }}\n2. metadata: Titulo-{{ $('Code').item.json.titulo }}\nDescripcion: {{ $('Code').item.json.descripcion }}\n3. imagenes:\n1er URL: {{ $json.output[0] }}\n2do URL: {{ $json.output[1] }}\n4. youtube: URL de video\nURL Youtube: {{ $('On form submission').item.json.URL }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=INSTRUCCIONES PARA FORMATEO DE BLOG HTML\n\nCONTEXTO:\nEres un experto en formateo HTML y estructuración de contenido web. Tu tarea es tomar el contenido proporcionado y crear una página web bien estructurada y visualmente atractiva.\n\nINPUTS DISPONIBLES:\n1. secciones: Todas las secciones en un HTML\n2. metadata: Titulo y descripcion\n3. imagenes: 2 URLs de imagenes\n4. youtube: URL de video\n\nESTRUCTURA HTML REQUERIDA:\n\n1. CONTENEDOR PRINCIPAL\n<div style=\"width: 100%; max-width: 1600px; margin: 0 auto; padding: 40px;\">\n\n2. ENCABEZADO\n- Título principal con el estilo especificado\n- Descripción formateada profesionalmente\n- Key takeaways en caja destacada\n\n3. SECCIÓN DE VIDEO (si existe)\n- Convertir URL de YouTube a formato embed\n- Usar contenedor con sombra y bordes redondeados\nBloque condicional de video:\n<div style=\"margin: 50px 0; padding: 30px; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08);\">\n    <iframe [...] src=\"URL\"></iframe>\n</div>\n\n4. CONTENIDO PRINCIPAL\n- Dividir el contenido en secciones equilibradas\n- Intercalar imágenes cada 2-3 párrafos\n- Primera imagen después del primer párrafo\n- Segunda imagen después del cuarto párrafo\n- Mantener espaciado consistente entre imagen y texto\n\nREGLAS DE ESTILO:\n\n1. Tipografía y Espaciado:\n- Títulos principales: 2.8rem\n- Subtítulos: 1.8rem\n- Texto base: 1.1rem\n- Espaciado entre secciones: 50px\n- Párrafos: línea-altura 1.8\n\n2. Colores:\n- Texto principal: #333333\n- Títulos: #2c3e50\n- Fondos alternos: #f8f9fa\n- Bordes: #f0f0f0\n\n3. Imágenes:\n- border-radius: 10px\n- margin: 40px 0\n- max-width: 100%\n- height: auto\n- box-shadow: 0 4px 15px rgba(0,0,0,0.1)\n\n4. Contenedores:\n- Padding consistente: 30px\n- Bordes redondeados: 12px\n- Sombras sutiles donde apropiado\n\n\nFORMATO DE SALIDA ESPERADO:\n\n<!DOCTYPE html>...<completo y formateado>...</html>\n\nEJEMPLO DE USO:\n\nInput:\n{\n    \"secciones\": [\"<contenido seccion 1>\", \"<contenido seccion 2>\"],\n    \"metadata\": {\n        \"titulo\": \"Título del Blog\",\n        \"descripcion\": \"Descripción del blog\"\n    },\n    \"imagenes\": {\n        \"imagen1\": \"url1\",\n        \"imagen2\": \"url2\"\n    },\n    \"youtube\": \"https://youtube.com/watch?v=xxxxx\"\n}\n\nOutput:\n<!DOCTYPE html>\n<html lang=\"es\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Título del Blog</title>\n    <style>\n        /* Estilos base */\n        :root {\n            --primary-color: #2c3e50;\n            --text-color: #333333;\n            --background-light: #f8f9fa;\n            --spacing-unit: 30px;\n        }\n        /* ... más estilos ... */\n    </style>\n</head>\n<body>\n    <div style=\"width: 100%; max-width: 1200px; margin: 0 auto; padding: 40px;\">\n        <h1 style=\"font-size: 2.8rem; margin-bottom: 35px; padding-bottom: 20px; border-bottom: 2px solid #f0f0f0;\">\n            Título del Blog\n        </h1>\n        <!-- Resto del contenido estructurado -->\n    </div>\n</body>\n</html>\n\nCONSIDERACIONES IMPORTANTES:\n\n1. Estructura:\n- Mantener jerarquía clara de contenido\n- Usar elementos semánticos apropiados\n- Asegurar responsive design\n\n2. Contenido:\n- Distribuir imágenes de forma equilibrada\n- Transformar URLs de YouTube a embeds\n- Mantener consistencia en estilos\n\n3. Rendimiento:\n- Optimizar estructura HTML\n- Minimizar anidamiento innecesario\n- Usar selectores eficientes\n\n4. Accesibilidad:\n- Incluir alt text en imágenes\n- Mantener contraste adecuado\n- Usar headings jerárquicamente\n\nTienes que usar este bloque a fuerzas para el formato del video\nBloque condicional de video:  <div style=\"margin: 50px 0; padding: 30px; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08);\"> <iframe [...] src=\"URL\"></iframe> </div>\n\n\nNOTAS\nNo quiero que empieces con nada solo dame el codigo no des anotaciones ni nada"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        180,
+        120
+      ],
+      "id": "4bd24cda-223c-4d03-b4b4-601f52f908de",
+      "name": "Basic LLM Chain2"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.2,
+      "position": [
+        200,
+        320
+      ],
+      "id": "fd33c288-4f42-4639-9aca-4faed477f87e",
+      "name": "Anthropic Chat Model1",
+      "credentials": {
+        "anthropicApi": {
+          "id": "H4BTYxrD3r6EELwv",
+          "name": "Anthropic account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "TRANSCRIBIRDOR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TRANSCRIBIRDOR": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Split Out1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Docs": {
+      "main": [
+        [
+          {
+            "node": "Google Docs1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Docs1": {
+      "main": [
+        [
+          {
+            "node": "Webflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain2": {
+      "main": [
+        [
+          {
+            "node": "Google Docs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webflow": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "eb0dbc34-605b-4671-8689-7d726ed45a30",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9e2f848261bc98db2d81ef9f6bc227e44dd7bcb32dc67342f351eea9930b0a64"
+  },
+  "id": "dtELjb2PUuTVbaTP",
+  "tags": []
+}
