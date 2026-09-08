@@ -1,0 +1,269 @@
+{
+  "name": "Keep Alive Supabase",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 13
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        880,
+        192
+      ],
+      "id": "97fb5608-ed11-4ffc-8561-1addf089a24f",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "content": "## 🧾 Agregar proyecto\n\n🪜 Paso a paso:\n* Ingresá a Supabase → https://supabase.com\n* Seleccioná el proyecto que querés agregar.\n* Obtené los datos necesarios:\n📍 url:\nIr a Settings → API\nCopiar el campo URL (ej: https://mi_proyecto.supabase.co)\n🔑 key (Service Role):\nEn la misma página, buscá Service Role key\nCopiala ",
+        "height": 320,
+        "width": 704,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -48,
+        304
+      ],
+      "typeVersion": 1,
+      "id": "600972a9-898a-4692-9a66-197b5ca60d5e",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## 🛠 SQL necesario\n\n⚠️ Ejecutar una sola vez por proyecto (en SQL editor de Supabase)\n\n```sql\n-- Crear tabla minimalista de keepalive\nCREATE TABLE IF NOT EXISTS public.keepalive (\n  key        text PRIMARY KEY,\n  touched_at timestamptz NOT NULL DEFAULT now()\n);\n\n-- Insertar la fila única de referencia\nINSERT INTO public.keepalive (key)\nVALUES ('keepalive')\nON CONFLICT (key) DO NOTHING;\n\n",
+        "height": 352,
+        "width": 704,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -48,
+        -64
+      ],
+      "typeVersion": 1,
+      "id": "6b6991bd-b3e8-48f0-892e-30193267da5b",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "keepalive",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "key",
+              "condition": "eq",
+              "keyValue": "keepalive"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "touched_at",
+              "fieldValue": "={{ $now.setZone('America/Mexico_City').toISO() }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1312,
+        192
+      ],
+      "id": "b8e02b79-768a-40bd-9c9b-a567643229e9",
+      "name": "Update Proyecto 1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "F5sLmVW5UUtK6qZH",
+          "name": "Supabase account Music lab"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "keepalive",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "key",
+              "condition": "eq",
+              "keyValue": "keepalive"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "touched_at",
+              "fieldValue": "={{ $now.setZone('America/Montevideo').toISO() }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1520,
+        192
+      ],
+      "id": "9ca3de90-c2d8-497a-9601-4ba15dd00310",
+      "name": "Update Proyecto 3",
+      "credentials": {
+        "supabaseApi": {
+          "id": "lm9Q9tncYS2oxiur",
+          "name": "Supabase account Sahasrara"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "keepalive",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "key",
+              "condition": "eq",
+              "keyValue": "keepalive"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "touched_at",
+              "fieldValue": "={{ $now.setZone('America/Montevideo').toISO() }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1744,
+        192
+      ],
+      "id": "d7baf242-69da-4b30-8cd7-a8a9a38d0ead",
+      "name": "Update Proyecto 4",
+      "credentials": {
+        "supabaseApi": {
+          "id": "lm9Q9tncYS2oxiur",
+          "name": "Supabase account Sahasrara"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "keepalive",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "key",
+              "condition": "eq",
+              "keyValue": "keepalive"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "touched_at",
+              "fieldValue": "={{ $now.setZone('America/Mexico_City').toISO() }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1104,
+        192
+      ],
+      "id": "2fe51723-c119-46f7-a83f-ccac6635dbb2",
+      "name": "Sahasrara",
+      "credentials": {
+        "supabaseApi": {
+          "id": "lm9Q9tncYS2oxiur",
+          "name": "Supabase account Sahasrara"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Sahasrara",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Proyecto 1": {
+      "main": [
+        [
+          {
+            "node": "Update Proyecto 3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Proyecto 3": {
+      "main": [
+        [
+          {
+            "node": "Update Proyecto 4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sahasrara": {
+      "main": [
+        [
+          {
+            "node": "Update Proyecto 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "timezone": "America/Mexico_City",
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "FVOjEMWMoHDpk3vY"
+  },
+  "versionId": "959c983c-9d3e-4d82-bb26-81b7ad647ba9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8b3fe26724360d468b6f7eebd6d26d73367911c6e70b6205e388bb1cc2a2632a"
+  },
+  "id": "ua7kNBVgjSSiQ9st",
+  "tags": []
+}
